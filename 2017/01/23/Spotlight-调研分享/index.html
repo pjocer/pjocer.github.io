@@ -1,0 +1,1007 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="framework,iOS," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="前言最近在做universal link团队内部分享的时候，经常被user_activity混淆，所以干脆做了一下调研分享，有效区分Spotlight和UserActivity的区分使用 三个API NSUserActivity (用户行为类)">
+<meta name="keywords" content="framework,iOS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spotlight 调研分享">
+<meta property="og:url" content="http://pjocer.top/2017/01/23/Spotlight-调研分享/index.html">
+<meta property="og:site_name" content="Pjocer">
+<meta property="og:description" content="前言最近在做universal link团队内部分享的时候，经常被user_activity混淆，所以干脆做了一下调研分享，有效区分Spotlight和UserActivity的区分使用 三个API NSUserActivity (用户行为类)">
+<meta property="og:updated_time" content="2017-05-03T12:08:16.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spotlight 调研分享">
+<meta name="twitter:description" content="前言最近在做universal link团队内部分享的时候，经常被user_activity混淆，所以干脆做了一下调研分享，有效区分Spotlight和UserActivity的区分使用 三个API NSUserActivity (用户行为类)">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://pjocer.top/2017/01/23/Spotlight-调研分享/"/>
+
+
+
+
+
+  <title> Spotlight 调研分享 | Pjocer </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Pjocer</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Pjocer的个人博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://pjocer.top/2017/01/23/Spotlight-调研分享/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Pjocer">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Pjocer">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Spotlight 调研分享
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-01-23T19:40:33+08:00">
+                2017-01-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2017/01/23/Spotlight-调研分享/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body han-init-context" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><strong>最近在做universal link团队内部分享的时候，经常被user_activity混淆，所以干脆做了一下调研分享，有效区分Spotlight和UserActivity的区分使用</strong></p>
+<h3 id="三个API"><a href="#三个API" class="headerlink" title="三个API"></a>三个API</h3><ul>
+<li>NSUserActivity (用户行为类)</li>
+</ul>
+<a id="more"></a>
+<blockquote>
+<p>NSUserActivity并不是一个新的概念，在iOS8中就已经使用它来做Handoff，在iOS9中User Activities变的可以搜索，并且可以在每个Activity里加上Index用的Metadata。但是只能用在用户访问过的或者看见过的内容中。<br>一旦某些内容被记录进NSUserActivity，就可以在Spotlight和Safari中同时被搜索到。而且还能通过设置’Eligible For Public Indexing’来让这些被Index的内容传到Apple的云端Cloud Index里，从而实现每个用户都能搜索到这个内容。同时Apple也强调了隐私的保护。并不是所有内容都是Public的，同一个内容需要在云端被Index超过一个限额（具体多少没有公布），才会最后成为Public的内容。所以用户不用担心自己看到的内容成为公众都能搜索的内容。</p>
+<p><strong>NSUserActivity基本内容</strong></p>
+<p>NSUserActivity对象提供了一种轻量级的方式捕获APP的状态并存储可以在之后使用。我们可以使用activity对象捕获用户正在操作的信息，比如：查看APP内容、编辑文本、查看网页、看video等。当系统启动我们的APP之后，activity对象是可以获取的，APP能够使用activity对象的信息恢复activity对象到合理的状态。Spotlight也可以使用activity对象来为用户提高搜索结果。在关键时刻创建NSUserActivity对象并注册它们到系统。例如：我们可能在用户打开网页、或APP移到后台、或用户在APP执行一些重要的任务的时候创建activity对象。用户的activity对象并不打算跟踪APP中的每一个任务，所以我们不应该使用activity对象用于一些小的编辑或者次要的修改。相反，当用户想之后继续使用或在其它设备上使用，我们应该使用activity对象。我们也可以使用它们为Spotlight提供更好的搜索结果。</p>
+<p>当创建一个用户的activity对象，做以下事情：</p>
+<ul>
+<li>使用合理的activity type来创建并初始化用户的activity对象。</li>
+<li>设置用户activity对象的title</li>
+<li>使用一个或者多个下列属性来配置任务的对象：<br>isEligibleForHandoff<br>isEligibleForSearch<br>isEligibleForPublicIndexing</li>
+<li>配置activity对象的相关属性</li>
+<li>对于用户activity对象，如果是配置用于搜索和公开位置，可以配置<strong>contentAttributeSet</strong>, keywords, webpageURL等属性以至于Spotlight能够索引对象。</li>
+<li><strong>调用becomeCurrent()方法来注册用户activity对象</strong></li>
+</ul>
+<p>当我们创建了NSUserActivity对象，我们使用了具体的字符串标识了activity的类型。该activity类型字符串是reverse-DNS格式。例如：当用户打开一个网页，我们可以指定activity的字符串为com.myCompany.myApp.OpenWebPage。<strong>我们必须在Info.plist文件中包含NSUserActivityTypes作为key值对应的activity的类型。系统根据该key的信息来确定你的APP是否有能力处理给定的用户activity对象。并且支持Handoff，支持SiriKit，支持提高搜索结果等。</strong></p>
+</blockquote>
+<ul>
+<li>Web Markup</li>
+</ul>
+<blockquote>
+<p>Web Markup允许那些在网站上镜像展示内容的应用在Spotlight中索引内容。用户无需安装应用，也能在Spotlight中展示结果。Apple的索引器会在你的网站上查找特定的markup。然后这会在Safari和Spotlight中展示给用户。</p>
+<p>即使你的应用没有安装，也能显示搜索结果，这能增加给潜在用户曝光你的应用的机会。你的应用中公开给搜索API的深度连接会保存在Apple的云端索引中。关于Web Markup更多的信息，参见Apple的文档 <a href="https://developer.apple.com/library/content/releasenotes/General/WhatsNewIniOS/Articles/iOS9.html#//apple_ref/doc/uid/TP40016198-SW4" target="_blank" rel="external">Use Web Markup to Make App Content Searchable</a>。</p>
+</blockquote>
+<ul>
+<li>CoreSpotlight</li>
+</ul>
+<blockquote>
+<p>CoreSpotlight是iOS9的新框架，能让你索引你的应用中的任何内容。NSUserActivity可以用来保存用户的历史，使用它你就可以索引任何你想要的数据。CoreSpotlight主要提供了在用户设备上对CoreSpotlight索引的底层访问。</p>
+<p>NSUserActivity 和 WebMarkup API使用起来相对简单，而CoreSpotlight则有一点复杂。为了展示CoreSpotlight API是如何使用的,我重新做了一份和NSUserActivity不同的Demo</p>
+</blockquote>
+<h1 id="Demo-Related"><a href="#Demo-Related" class="headerlink" title="Demo Related"></a>Demo Related</h1><p>–</p>
+<h3 id="NSUserActivity"><a href="#NSUserActivity" class="headerlink" title="NSUserActivity"></a><strong>NSUserActivity</strong></h3><p><a href="https://git.cn.memebox.com/iOS-Tech_Research/Supportlight.git" target="_blank" rel="external">NSUserActivity Demo地址</a></p>
+<h5 id="AppDelegate"><a href="#AppDelegate" class="headerlink" title="AppDelegate"></a>AppDelegate</h5><blockquote>
+<p>主要是关注AppDelegate中的ContinueUserActivity方法，当接受到数据相关联的用户activity时，该方法将会被调用。该方法提供了我们机会执行具体的任务来更新APP。如果我们并没有实现该方法中实现了该方法或者返回值为false，iOS将尝试为APP创建文本来打开URL，并且iOS知道APP并不能够处理当前activity。如果返回true表示APP能够处理当前activity。简单一点理解操作就是：当点击搜索之后的内容，会触发该方法，在这里我们可以进行相应的任务处理，demo中执行了页面的跳转。</p>
+</blockquote>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">- (<span class="built_in">BOOL</span>)application:(<span class="built_in">UIApplication</span> *)application continueUserActivity:(<span class="built_in">NSUserActivity</span> *)userActivity restorationHandler:(<span class="keyword">void</span>(^)(<span class="built_in">NSArray</span> * __<span class="keyword">nullable</span> restorableObjects))restorationHandler &#123;</div><div class="line">	<span class="keyword">if</span> ([userActivity.activityType isEqualToString:<span class="built_in">NSUserActivityTypeMemebox</span>]) &#123;</div><div class="line">   		 [[SpotlightHandler sharedInstance] handleUserActivity:userActivity];</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<blockquote>
+<p>NSUserActivityTypeMemebox就是在Info.plist中注册的字符串</p>
+</blockquote>
+<h5 id="SpotlightHandler"><a href="#SpotlightHandler" class="headerlink" title="SpotlightHandler"></a>SpotlightHandler</h5><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">void</span>)handleUserActivity:(<span class="built_in">NSUserActivity</span> *)activity &#123;</div><div class="line">    MBoxBaseViewController *controller = [(<span class="built_in">UINavigationController</span> *)[(<span class="built_in">UITabBarController</span> *)[<span class="built_in">UIApplication</span> sharedApplication].keyWindow.rootViewController selectedViewController] viewControllers].firstObject;</div><div class="line">    [controller restoreUserActivityState:activity];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<blockquote>
+<p>在用户通过Spotlight搜索应用内内容，并点击进入应用后，activity就包含了当前用户搜索的内容信息，Demo中我获取了currentDisplayViewController并做了跳转操作。处理这段逻辑我放在了viewController的restoreUserActivityState方法中。</p>
+</blockquote>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">-(<span class="keyword">void</span>)restoreUserActivityState:(<span class="built_in">NSUserActivity</span> *)activity &#123;</div><div class="line">    [<span class="keyword">super</span> restoreUserActivityState:activity];</div><div class="line">    [<span class="keyword">self</span> handleUserActivity:activity];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">void</span>)handleUserActivity:(<span class="built_in">NSUserActivity</span> *)activity &#123;</div><div class="line">    <span class="built_in">NSUserActivitySkipType</span> type = [[activity.userInfo objectForKey:<span class="built_in">NSUserActivitySkipTypeKey</span>] integerValue];</div><div class="line">    <span class="keyword">switch</span> (type) &#123;</div><div class="line">        <span class="keyword">case</span> <span class="built_in">NSUserActivitySkipTypePages</span>:</div><div class="line">            [MBoxShowHUD showHudWith:<span class="string">@"你打开了首页!!~~~"</span> animated:<span class="literal">YES</span> autoHiden:<span class="literal">YES</span>];</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">case</span> <span class="built_in">NSUserActivitySkipTypeProduct</span>:</div><div class="line">        &#123;</div><div class="line">            ProductDetailViewController *product = [[ProductDetailViewController alloc] init];</div><div class="line">            product.productId = [activity.userInfo objectForKey:<span class="built_in">NSUserActivitySkipTypeProductKey</span>];</div><div class="line">            <span class="keyword">if</span> (<span class="keyword">self</span>.navigationController) &#123;</div><div class="line">                [<span class="keyword">self</span>.navigationController pushViewController:product animated:<span class="literal">YES</span>];</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">case</span> <span class="built_in">NSUserActivitySkipTypeUnknown</span>:</div><div class="line">            [MBoxShowHUD showHudWith:<span class="string">@"你打开了未知的@￥#￥！\\DDR@$R……@……@￥#"</span> animated:<span class="literal">YES</span> autoHiden:<span class="literal">YES</span>];</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">default</span>:</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面是load activity的时候的逻辑，而index是在用户做某种行为之后(Demo中我是在用户进入viewController时存储)</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">[[SDWebImageDownloader sharedDownloader] downloadImageWithURL:[<span class="built_in">NSURL</span> URLWithString:productInfo.imgUrl] options:SDWebImageDownloaderProgressiveDownload progress:<span class="literal">nil</span> completed:^(<span class="built_in">UIImage</span> *image, <span class="built_in">NSData</span> *data, <span class="built_in">NSError</span> *error, <span class="built_in">BOOL</span> finished) &#123;</div><div class="line">	[<span class="keyword">self</span> setUserActivityWithTitle:productInfo.brandName content:productInfo.name image:image userInfo:@&#123;<span class="built_in">NSUserActivitySkipTypeKey</span>:@(<span class="built_in">NSUserActivitySkipTypeProduct</span>),<span class="built_in">NSUserActivitySkipTypeProductKey</span>:<span class="keyword">self</span>.productId&#125;];</div><div class="line">&#125;];</div></pre></td></tr></table></figure>
+<blockquote>
+<p>MboxBaseViewController的setUserActivityWithTitle: content: image: userInfo:方法</p>
+</blockquote>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">void</span>)setUserActivityWithTitle:(<span class="built_in">NSString</span> *)title content:(<span class="built_in">NSString</span> *)content image:(<span class="built_in">UIImage</span> *)image userInfo:(<span class="built_in">NSDictionary</span> *)userinfo &#123;</div><div class="line">    <span class="built_in">dispatch_async</span>(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, <span class="number">0</span>), ^&#123;</div><div class="line">        tempUserInfo = userinfo;</div><div class="line">        <span class="built_in">NSUserActivity</span> *activity = [[<span class="built_in">NSUserActivity</span> alloc] initWithActivityType:<span class="built_in">NSUserActivityTypeMemebox</span>];</div><div class="line">        activity.eligibleForSearch = <span class="literal">YES</span>;</div><div class="line">        activity.eligibleForPublicIndexing = <span class="literal">YES</span>;</div><div class="line">        CSSearchableItemAttributeSet *set = [[CSSearchableItemAttributeSet alloc] initWithItemContentType:(<span class="built_in">NSString</span> *)kUTTypeText];</div><div class="line">        set.title = title; <span class="comment">//Spotlight搜索时显示的title</span></div><div class="line">        <span class="built_in">NSString</span> *searchContent = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"%@"</span>,content];</div><div class="line">        <span class="built_in">NSString</span> *contentDescription = <span class="built_in">NSLocalizedString</span>(searchContent, <span class="literal">nil</span>);</div><div class="line">        set.contentDescription = contentDescription; <span class="comment">//Spotlight搜索时显示的详情</span></div><div class="line">        set.thumbnailData = <span class="built_in">UIImagePNGRepresentation</span>(image?image:[<span class="built_in">UIImage</span> imageNamed:<span class="string">@"AppIcon"</span>]);</div><div class="line">        activity.contentAttributeSet = set;</div><div class="line">        activity.keywords = [<span class="built_in">NSSet</span> setWithArray:@[title,contentDescription,<span class="string">@"美美箱"</span>]];<span class="comment">//Spotlight搜索关键字</span></div><div class="line">        <span class="keyword">self</span>.userActivity = activity;<span class="comment">//避免当前activity被提前释放</span></div><div class="line">        [<span class="keyword">self</span>.userActivity becomeCurrent];<span class="comment">//向系统注册当前activity</span></div><div class="line">        [activity setNeedsSave:<span class="literal">YES</span>];</div><div class="line">        activity.delegate = <span class="keyword">self</span>;</div><div class="line">    &#125;);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="meta">#pragma NSUserActivityDelegate</span></div><div class="line"><span class="comment">//通知代理用户的activity将被存储,在此代理方法中保存userActivity的userInfo信息</span></div><div class="line">-(<span class="keyword">void</span>)userActivityWillSave:(<span class="built_in">NSUserActivity</span> *)userActivity &#123;</div><div class="line">    userActivity.userInfo = tempUserInfo;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>以上是使用NSUserActivity完成Spotlight搜索应用内信息的功能</p>
+<h3 id="CoreSpotlight"><a href="#CoreSpotlight" class="headerlink" title="CoreSpotlight"></a><strong>CoreSpotlight</strong></h3><p><a href="http://stackoverflow.com/questions/33031087/what-is-the-basic-difference-between-using-nsuseractivity-corespotlight-framew/34695376#34695376" target="_blank" rel="external">对比CoreSpotlight与NSUserActivity</a></p>
+<p><a href="git@git.cn.memebox.com:iOS-Tech_Research/Supportlight.git">CoreSpotlightDemo</a>与NSUserActivity在同一个git中，branch切换到Spotlight_CoreSpotlight</p>
+<p><strong>Appdelegate</strong></p>
+<p>使用CoreSpotlight除了系统默认的CSSearchableItemActionType外，还有一个CSQueryContinuationActionType。</p>
+<p>同样是在application: continueUserActivity:restorationHandler:方法中处理点击item后的回调操作</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> ([userActivity.activityType isEqualToString:CSQueryContinuationActionType]) &#123;</div><div class="line">    [[SpotlightManager sharedManager] handleSearchUserActivity:userActivity];</div><div class="line">    </div><div class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> ([userActivity.activityType isEqualToString:CSSearchableItemActionType]) &#123;</div><div class="line">    [[SpotlightManager sharedManager] handleSearchUserActivity:userActivity];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><strong>Comparison</strong><br>&gt;<br>ActivityType                         | Difference          |Value<br>—————————– | ——————–|—–<br>CSQueryContinuationActionType | 用户点击‘在应用内搜索’ | 用户搜索的词<br>CSSearchableItemActionType    |  用户点击某个具体的item|用户点击的title</p>
+<p>用户要打开‘Search Continuation’功能，需要在Info.plist中设置对应的key-value</p>
+<blockquote>
+<p>CoreSpotlightContinuation - YES</p>
+</blockquote>
+<p><strong>SpotlightManager</strong></p>
+<p>&gt;<br><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">void</span>)handleSearchUserActivity:(<span class="built_in">NSUserActivity</span> *)activity &#123;</div><div class="line">    <span class="keyword">if</span> ([activity.activityType isEqualToString:CSQueryContinuationActionType]) &#123;</div><div class="line">        <span class="built_in">NSString</span> *queryString = [activity.userInfo valueForKey:CSSearchQueryString];</div><div class="line">        [<span class="keyword">self</span> pushSearchViewControllerWithSearchWord:queryString];</div><div class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> ([activity.activityType isEqualToString:CSSearchableItemActionType]) &#123;</div><div class="line">        <span class="built_in">NSString</span> *identifier = [activity.userInfo valueForKey:CSSearchableItemActivityIdentifier];</div><div class="line">        <span class="keyword">if</span> (identifier.intValue) &#123;</div><div class="line">            [<span class="keyword">self</span> pushProductDetailViewControllerWithProductID:identifier];</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            [<span class="keyword">self</span> pushSearchViewControllerWithSearchWord:identifier];</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>Demo里，我在展示ProductDetailViewController时，保存了当前Product的ProductID，并设置identifier为此ProductID，因此用户点击item后取到的identifier正好是productID（这种做法个人并不推荐）</p>
+<p>&gt;<br><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">NSString</span> *content = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"%@ %@"</span>,productInfo.brandName,productInfo.name];</div><div class="line"><span class="comment">//创建SpotlightItemInfo结构体，包含productID等信息</span></div><div class="line">SpotlightItemInfo info = makeSpotlightItemInfoWith(productInfo.name, content, <span class="keyword">self</span>.productId, image);</div><div class="line"><span class="comment">//调用接口保存</span></div><div class="line">[[SpotlightManager sharedManager] saveItemWithInfo:info];</div></pre></td></tr></table></figure></p>
+<p>&gt;<br><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">void</span>)saveItemWithInfo:(SpotlightItemInfo)info &#123;</div><div class="line">    [<span class="keyword">self</span> indexItemWithTitle:info.title image:info.displayImage content:info.content customInfo:info.productID];</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>&gt;<br><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">void</span>)indexItemWithTitle:(<span class="built_in">NSString</span> *)title image:(<span class="built_in">UIImage</span> *)image content:(<span class="built_in">NSString</span> *)content customInfo:(<span class="built_in">NSString</span> *)info &#123;</div><div class="line">    <span class="keyword">if</span> (![CSSearchableIndex isIndexingAvailable]) &#123;</div><div class="line">        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(<span class="number">5</span> * <span class="built_in">NSEC_PER_SEC</span>)), dispatch_get_main_queue(), ^&#123;</div><div class="line">            [MBoxShowHUD showHudWith:<span class="string">@"设备不可支持Spotlight搜索应用内信息"</span> animated:<span class="literal">NO</span> autoHiden:<span class="literal">YES</span>];</div><div class="line">        &#125;);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        CSSearchableItemAttributeSet *attributeSet = [[CSSearchableItemAttributeSet alloc] initWithItemContentType:(<span class="built_in">NSString</span> *)kUTTypeText];</div><div class="line">        attributeSet.title = title;</div><div class="line">        attributeSet.contentDescription = <span class="built_in">NSLocalizedString</span>(content, <span class="literal">nil</span>);</div><div class="line">        <span class="built_in">UIImage</span> *thumbImage = image?:[<span class="built_in">UIImage</span> imageNamed:<span class="string">@"AppIcon"</span>];</div><div class="line">        attributeSet.thumbnailData = <span class="built_in">UIImagePNGRepresentation</span>(thumbImage);</div><div class="line">        attributeSet.keywords = @[title,content,<span class="string">@"美美箱"</span>];</div><div class="line">        CSSearchableItem *item = [[CSSearchableItem alloc] initWithUniqueIdentifier:info domainIdentifier:domainIdentifierKey attributeSet:attributeSet];</div><div class="line">        item.expirationDate = [<span class="built_in">NSDate</span> dateWithTimeIntervalSinceNow:<span class="number">60</span> * <span class="number">60</span>]; <span class="comment">//设置一小时后失效</span></div><div class="line">        [<span class="keyword">self</span> saveSearchableItem:item];</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>&gt;<br><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">void</span>)saveSearchableItem:(CSSearchableItem *)item &#123;</div><div class="line">    [<span class="keyword">self</span>.index indexSearchableItems:@[item] completionHandler:^(<span class="built_in">NSError</span> * _Nullable error) &#123;</div><div class="line">        <span class="keyword">if</span> (error) &#123;</div><div class="line">            DLog(<span class="string">@"%@"</span>,error.description);</div><div class="line">            <span class="built_in">dispatch_async</span>(dispatch_get_main_queue(), ^&#123;</div><div class="line">                [MBoxShowHUD showHudWith:[<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"%s failed"</span>,__func__] animated:<span class="literal">YES</span> autoHiden:<span class="literal">YES</span>];</div><div class="line">            &#125;);</div><div class="line">        &#125;</div><div class="line">    &#125;];</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p><strong>Discussion</strong></p>
+<ul>
+<li>使用CSSearchableIndex保存，删除item索引</li>
+<li>使用CSQueryString查询item并进行删除等操作</li>
+<li>使用<a href="https://developer.apple.com/reference/corespotlight/cssearchableitemattributeset" target="_blank" rel="external">CSSearchableItemAttributeSet</a>设置item的属性</li>
+<li>在合适的时机保存item</li>
+</ul>
+<p><strong>参考</strong></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <ul class="post-copyright">
+    <li class="post-copyright-author">
+      <strong>本文作者：</strong>
+      Pjocer
+    </li>
+    <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="http://pjocer.top/2017/01/23/Spotlight-调研分享/" title="Spotlight 调研分享">http://pjocer.top/2017/01/23/Spotlight-调研分享/</a>
+    </li>
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong>
+      本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/" rel="external nofollow" target="_blank">CC BY-NC-SA 3.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/framework/" rel="tag"># framework</a>
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/01/14/申请加急/" rel="prev" title="申请加急">
+                申请加急 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="Pjocer" />
+          <p class="site-author-name" itemprop="name">Pjocer</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#三个API"><span class="nav-number">1.1.</span> <span class="nav-text">三个API</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Demo-Related"><span class="nav-number"></span> <span class="nav-text">Demo Related</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#NSUserActivity"><span class="nav-number">0.1.</span> <span class="nav-text">NSUserActivity</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#AppDelegate"><span class="nav-number">0.1.0.1.</span> <span class="nav-text">AppDelegate</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#SpotlightHandler"><span class="nav-number">0.1.0.2.</span> <span class="nav-text">SpotlightHandler</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CoreSpotlight"><span class="nav-number">0.2.</span> <span class="nav-text">CoreSpotlight</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pjocer</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<script>
+(function(){
+    var bp = document.createElement('script');
+    bp.src = '//push.zhanzhang.baidu.com/push.js';
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "9f5f265643a04113807e70e9e9bc619e",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+      search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.popup').toggle();
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+      $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = $( "entry", xmlResponse ).map(function() {
+            return {
+              title: $( "title", this ).text(),
+              content: $("content",this).text(),
+              url: $( "url" , this).text()
+            };
+          }).get();
+          var $input = document.getElementById(search_id);
+          var $resultContent = document.getElementById(content_id);
+          $input.addEventListener('input', function(){
+            var matchcounts = 0;
+            var str='<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length > 1) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var content_index = [];
+                var data_title = data.title.trim().toLowerCase();
+                var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                var data_url = decodeURIComponent(data.url);
+                var index_title = -1;
+                var index_content = -1;
+                var first_occur = -1;
+                // only match artiles with not empty titles and contents
+                if(data_title != '') {
+                  keywords.forEach(function(keyword, i) {
+                    index_title = data_title.indexOf(keyword);
+                    index_content = data_content.indexOf(keyword);
+                    if( index_title >= 0 || index_content >= 0 ){
+                      isMatch = true;
+                      if (i == 0) {
+                        first_occur = index_content;
+                      }
+                    }
+
+                  });
+                }
+                // show search results
+                if (isMatch) {
+                  matchcounts += 1;
+                  str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                  var content = data.content.trim().replace(/<[^>]+>/g,"");
+                  if (first_occur >= 0) {
+                    // cut out 100 characters
+                    var start = first_occur - 20;
+                    var end = first_occur + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if(start == 0){
+                      end = 50;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    var match_content = content.substring(start, end);
+                    // highlight all keywords
+                    keywords.forEach(function(keyword){
+                      var regS = new RegExp(keyword, "gi");
+                      match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                    });
+
+                    str += "<p class=\"search-result\">" + match_content +"...</p>"
+                  }
+                  str += "</li>";
+                }
+              })};
+            str += "</ul>";
+            if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+            if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+            $resultContent.innerHTML = str;
+          });
+          proceedsearch();
+        }
+      });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

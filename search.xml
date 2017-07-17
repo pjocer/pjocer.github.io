@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search> 
+  
+    
+    <entry>
+      <title><![CDATA[Spotlight 调研分享]]></title>
+      <url>/2017/01/23/Spotlight-%E8%B0%83%E7%A0%94%E5%88%86%E4%BA%AB/</url>
+      <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><strong>最近在做universal link团队内部分享的时候，经常被user_activity混淆，所以干脆做了一下调研分享，有效区分Spotlight和UserActivity的区分使用</strong></p>
+<h3 id="三个API"><a href="#三个API" class="headerlink" title="三个API"></a>三个API</h3><ul>
+<li>NSUserActivity (用户行为类)</li>
+</ul>
+<a id="more"></a>
+<blockquote>
+<p>NSUserActivity并不是一个新的概念，在iOS8中就已经使用它来做Handoff，在iOS9中User Activities变的可以搜索，并且可以在每个Activity里加上Index用的Metadata。但是只能用在用户访问过的或者看见过的内容中。<br>一旦某些内容被记录进NSUserActivity，就可以在Spotlight和Safari中同时被搜索到。而且还能通过设置’Eligible For Public Indexing’来让这些被Index的内容传到Apple的云端Cloud Index里，从而实现每个用户都能搜索到这个内容。同时Apple也强调了隐私的保护。并不是所有内容都是Public的，同一个内容需要在云端被Index超过一个限额（具体多少没有公布），才会最后成为Public的内容。所以用户不用担心自己看到的内容成为公众都能搜索的内容。</p>
+<p><strong>NSUserActivity基本内容</strong></p>
+<p>NSUserActivity对象提供了一种轻量级的方式捕获APP的状态并存储可以在之后使用。我们可以使用activity对象捕获用户正在操作的信息，比如：查看APP内容、编辑文本、查看网页、看video等。当系统启动我们的APP之后，activity对象是可以获取的，APP能够使用activity对象的信息恢复activity对象到合理的状态。Spotlight也可以使用activity对象来为用户提高搜索结果。在关键时刻创建NSUserActivity对象并注册它们到系统。例如：我们可能在用户打开网页、或APP移到后台、或用户在APP执行一些重要的任务的时候创建activity对象。用户的activity对象并不打算跟踪APP中的每一个任务，所以我们不应该使用activity对象用于一些小的编辑或者次要的修改。相反，当用户想之后继续使用或在其它设备上使用，我们应该使用activity对象。我们也可以使用它们为Spotlight提供更好的搜索结果。</p>
+<p>当创建一个用户的activity对象，做以下事情：</p>
+<ul>
+<li>使用合理的activity type来创建并初始化用户的activity对象。</li>
+<li>设置用户activity对象的title</li>
+<li>使用一个或者多个下列属性来配置任务的对象：<br>isEligibleForHandoff<br>isEligibleForSearch<br>isEligibleForPublicIndexing</li>
+<li>配置activity对象的相关属性</li>
+<li>对于用户activity对象，如果是配置用于搜索和公开位置，可以配置<strong>contentAttributeSet</strong>, keywords, webpageURL等属性以至于Spotlight能够索引对象。</li>
+<li><strong>调用becomeCurrent()方法来注册用户activity对象</strong></li>
+</ul>
+<p>当我们创建了NSUserActivity对象，我们使用了具体的字符串标识了activity的类型。该activity类型字符串是reverse-DNS格式。例如：当用户打开一个网页，我们可以指定activity的字符串为com.myCompany.myApp.OpenWebPage。<strong>我们必须在Info.plist文件中包含NSUserActivityTypes作为key值对应的activity的类型。系统根据该key的信息来确定你的APP是否有能力处理给定的用户activity对象。并且支持Handoff，支持SiriKit，支持提高搜索结果等。</strong></p>
+</blockquote>
+<ul>
+<li>Web Markup</li>
+</ul>
+<blockquote>
+<p>Web Markup允许那些在网站上镜像展示内容的应用在Spotlight中索引内容。用户无需安装应用，也能在Spotlight中展示结果。Apple的索引器会在你的网站上查找特定的markup。然后这会在Safari和Spotlight中展示给用户。</p>
+<p>即使你的应用没有安装，也能显示搜索结果，这能增加给潜在用户曝光你的应用的机会。你的应用中公开给搜索API的深度连接会保存在Apple的云端索引中。关于Web Markup更多的信息，参见Apple的文档 <a href="https://developer.apple.com/library/content/releasenotes/General/WhatsNewIniOS/Articles/iOS9.html#//apple_ref/doc/uid/TP40016198-SW4" target="_blank" rel="external">Use Web Markup to Make App Content Searchable</a>。</p>
+</blockquote>
+<ul>
+<li>CoreSpotlight</li>
+</ul>
+<blockquote>
+<p>CoreSpotlight是iOS9的新框架，能让你索引你的应用中的任何内容。NSUserActivity可以用来保存用户的历史，使用它你就可以索引任何你想要的数据。CoreSpotlight主要提供了在用户设备上对CoreSpotlight索引的底层访问。</p>
+<p>NSUserActivity 和 WebMarkup API使用起来相对简单，而CoreSpotlight则有一点复杂。为了展示CoreSpotlight API是如何使用的,我重新做了一份和NSUserActivity不同的Demo</p>
+</blockquote>
+<h1 id="Demo-Related"><a href="#Demo-Related" class="headerlink" title="Demo Related"></a>Demo Related</h1><p>–</p>
+<h3 id="NSUserActivity"><a href="#NSUserActivity" class="headerlink" title="NSUserActivity"></a><strong>NSUserActivity</strong></h3><p><a href="https://git.cn.memebox.com/iOS-Tech_Research/Supportlight.git" target="_blank" rel="external">NSUserActivity Demo地址</a></p>
+<h5 id="AppDelegate"><a href="#AppDelegate" class="headerlink" title="AppDelegate"></a>AppDelegate</h5><blockquote>
+<p>主要是关注AppDelegate中的ContinueUserActivity方法，当接受到数据相关联的用户activity时，该方法将会被调用。该方法提供了我们机会执行具体的任务来更新APP。如果我们并没有实现该方法中实现了该方法或者返回值为false，iOS将尝试为APP创建文本来打开URL，并且iOS知道APP并不能够处理当前activity。如果返回true表示APP能够处理当前activity。简单一点理解操作就是：当点击搜索之后的内容，会触发该方法，在这里我们可以进行相应的任务处理，demo中执行了页面的跳转。</p>
+</blockquote>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">- (<span class="built_in">BOOL</span>)application:(<span class="built_in">UIApplication</span> *)application continueUserActivity:(<span class="built_in">NSUserActivity</span> *)userActivity restorationHandler:(<span class="keyword">void</span>(^)(<span class="built_in">NSArray</span> * __<span class="keyword">nullable</span> restorableObjects))restorationHandler &#123;</div><div class="line">	<span class="keyword">if</span> ([userActivity.activityType isEqualToString:<span class="built_in">NSUserActivityTypeMemebox</span>]) &#123;</div><div class="line">   		 [[SpotlightHandler sharedInstance] handleUserActivity:userActivity];</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<blockquote>
+<p>NSUserActivityTypeMemebox就是在Info.plist中注册的字符串</p>
+</blockquote>
+<h5 id="SpotlightHandler"><a href="#SpotlightHandler" class="headerlink" title="SpotlightHandler"></a>SpotlightHandler</h5><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">void</span>)handleUserActivity:(<span class="built_in">NSUserActivity</span> *)activity &#123;</div><div class="line">    MBoxBaseViewController *controller = [(<span class="built_in">UINavigationController</span> *)[(<span class="built_in">UITabBarController</span> *)[<span class="built_in">UIApplication</span> sharedApplication].keyWindow.rootViewController selectedViewController] viewControllers].firstObject;</div><div class="line">    [controller restoreUserActivityState:activity];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<blockquote>
+<p>在用户通过Spotlight搜索应用内内容，并点击进入应用后，activity就包含了当前用户搜索的内容信息，Demo中我获取了currentDisplayViewController并做了跳转操作。处理这段逻辑我放在了viewController的restoreUserActivityState方法中。</p>
+</blockquote>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">-(<span class="keyword">void</span>)restoreUserActivityState:(<span class="built_in">NSUserActivity</span> *)activity &#123;</div><div class="line">    [<span class="keyword">super</span> restoreUserActivityState:activity];</div><div class="line">    [<span class="keyword">self</span> handleUserActivity:activity];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">void</span>)handleUserActivity:(<span class="built_in">NSUserActivity</span> *)activity &#123;</div><div class="line">    <span class="built_in">NSUserActivitySkipType</span> type = [[activity.userInfo objectForKey:<span class="built_in">NSUserActivitySkipTypeKey</span>] integerValue];</div><div class="line">    <span class="keyword">switch</span> (type) &#123;</div><div class="line">        <span class="keyword">case</span> <span class="built_in">NSUserActivitySkipTypePages</span>:</div><div class="line">            [MBoxShowHUD showHudWith:<span class="string">@"你打开了首页!!~~~"</span> animated:<span class="literal">YES</span> autoHiden:<span class="literal">YES</span>];</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">case</span> <span class="built_in">NSUserActivitySkipTypeProduct</span>:</div><div class="line">        &#123;</div><div class="line">            ProductDetailViewController *product = [[ProductDetailViewController alloc] init];</div><div class="line">            product.productId = [activity.userInfo objectForKey:<span class="built_in">NSUserActivitySkipTypeProductKey</span>];</div><div class="line">            <span class="keyword">if</span> (<span class="keyword">self</span>.navigationController) &#123;</div><div class="line">                [<span class="keyword">self</span>.navigationController pushViewController:product animated:<span class="literal">YES</span>];</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">case</span> <span class="built_in">NSUserActivitySkipTypeUnknown</span>:</div><div class="line">            [MBoxShowHUD showHudWith:<span class="string">@"你打开了未知的@￥#￥！\\DDR@$R……@……@￥#"</span> animated:<span class="literal">YES</span> autoHiden:<span class="literal">YES</span>];</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">default</span>:</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面是load activity的时候的逻辑，而index是在用户做某种行为之后(Demo中我是在用户进入viewController时存储)</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">[[SDWebImageDownloader sharedDownloader] downloadImageWithURL:[<span class="built_in">NSURL</span> URLWithString:productInfo.imgUrl] options:SDWebImageDownloaderProgressiveDownload progress:<span class="literal">nil</span> completed:^(<span class="built_in">UIImage</span> *image, <span class="built_in">NSData</span> *data, <span class="built_in">NSError</span> *error, <span class="built_in">BOOL</span> finished) &#123;</div><div class="line">	[<span class="keyword">self</span> setUserActivityWithTitle:productInfo.brandName content:productInfo.name image:image userInfo:@&#123;<span class="built_in">NSUserActivitySkipTypeKey</span>:@(<span class="built_in">NSUserActivitySkipTypeProduct</span>),<span class="built_in">NSUserActivitySkipTypeProductKey</span>:<span class="keyword">self</span>.productId&#125;];</div><div class="line">&#125;];</div></pre></td></tr></table></figure>
+<blockquote>
+<p>MboxBaseViewController的setUserActivityWithTitle: content: image: userInfo:方法</p>
+</blockquote>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">void</span>)setUserActivityWithTitle:(<span class="built_in">NSString</span> *)title content:(<span class="built_in">NSString</span> *)content image:(<span class="built_in">UIImage</span> *)image userInfo:(<span class="built_in">NSDictionary</span> *)userinfo &#123;</div><div class="line">    <span class="built_in">dispatch_async</span>(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, <span class="number">0</span>), ^&#123;</div><div class="line">        tempUserInfo = userinfo;</div><div class="line">        <span class="built_in">NSUserActivity</span> *activity = [[<span class="built_in">NSUserActivity</span> alloc] initWithActivityType:<span class="built_in">NSUserActivityTypeMemebox</span>];</div><div class="line">        activity.eligibleForSearch = <span class="literal">YES</span>;</div><div class="line">        activity.eligibleForPublicIndexing = <span class="literal">YES</span>;</div><div class="line">        CSSearchableItemAttributeSet *set = [[CSSearchableItemAttributeSet alloc] initWithItemContentType:(<span class="built_in">NSString</span> *)kUTTypeText];</div><div class="line">        set.title = title; <span class="comment">//Spotlight搜索时显示的title</span></div><div class="line">        <span class="built_in">NSString</span> *searchContent = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"%@"</span>,content];</div><div class="line">        <span class="built_in">NSString</span> *contentDescription = <span class="built_in">NSLocalizedString</span>(searchContent, <span class="literal">nil</span>);</div><div class="line">        set.contentDescription = contentDescription; <span class="comment">//Spotlight搜索时显示的详情</span></div><div class="line">        set.thumbnailData = <span class="built_in">UIImagePNGRepresentation</span>(image?image:[<span class="built_in">UIImage</span> imageNamed:<span class="string">@"AppIcon"</span>]);</div><div class="line">        activity.contentAttributeSet = set;</div><div class="line">        activity.keywords = [<span class="built_in">NSSet</span> setWithArray:@[title,contentDescription,<span class="string">@"美美箱"</span>]];<span class="comment">//Spotlight搜索关键字</span></div><div class="line">        <span class="keyword">self</span>.userActivity = activity;<span class="comment">//避免当前activity被提前释放</span></div><div class="line">        [<span class="keyword">self</span>.userActivity becomeCurrent];<span class="comment">//向系统注册当前activity</span></div><div class="line">        [activity setNeedsSave:<span class="literal">YES</span>];</div><div class="line">        activity.delegate = <span class="keyword">self</span>;</div><div class="line">    &#125;);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="meta">#pragma NSUserActivityDelegate</span></div><div class="line"><span class="comment">//通知代理用户的activity将被存储,在此代理方法中保存userActivity的userInfo信息</span></div><div class="line">-(<span class="keyword">void</span>)userActivityWillSave:(<span class="built_in">NSUserActivity</span> *)userActivity &#123;</div><div class="line">    userActivity.userInfo = tempUserInfo;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>以上是使用NSUserActivity完成Spotlight搜索应用内信息的功能</p>
+<h3 id="CoreSpotlight"><a href="#CoreSpotlight" class="headerlink" title="CoreSpotlight"></a><strong>CoreSpotlight</strong></h3><p><a href="http://stackoverflow.com/questions/33031087/what-is-the-basic-difference-between-using-nsuseractivity-corespotlight-framew/34695376#34695376" target="_blank" rel="external">对比CoreSpotlight与NSUserActivity</a></p>
+<p><a href="git@git.cn.memebox.com:iOS-Tech_Research/Supportlight.git">CoreSpotlightDemo</a>与NSUserActivity在同一个git中，branch切换到Spotlight_CoreSpotlight</p>
+<p><strong>Appdelegate</strong></p>
+<p>使用CoreSpotlight除了系统默认的CSSearchableItemActionType外，还有一个CSQueryContinuationActionType。</p>
+<p>同样是在application: continueUserActivity:restorationHandler:方法中处理点击item后的回调操作</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> ([userActivity.activityType isEqualToString:CSQueryContinuationActionType]) &#123;</div><div class="line">    [[SpotlightManager sharedManager] handleSearchUserActivity:userActivity];</div><div class="line">    </div><div class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> ([userActivity.activityType isEqualToString:CSSearchableItemActionType]) &#123;</div><div class="line">    [[SpotlightManager sharedManager] handleSearchUserActivity:userActivity];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><strong>Comparison</strong><br>&gt;<br>ActivityType                         | Difference          |Value<br>—————————– | ——————–|—–<br>CSQueryContinuationActionType | 用户点击‘在应用内搜索’ | 用户搜索的词<br>CSSearchableItemActionType    |  用户点击某个具体的item|用户点击的title</p>
+<p>用户要打开‘Search Continuation’功能，需要在Info.plist中设置对应的key-value</p>
+<blockquote>
+<p>CoreSpotlightContinuation - YES</p>
+</blockquote>
+<p><strong>SpotlightManager</strong></p>
+<p>&gt;<br><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">void</span>)handleSearchUserActivity:(<span class="built_in">NSUserActivity</span> *)activity &#123;</div><div class="line">    <span class="keyword">if</span> ([activity.activityType isEqualToString:CSQueryContinuationActionType]) &#123;</div><div class="line">        <span class="built_in">NSString</span> *queryString = [activity.userInfo valueForKey:CSSearchQueryString];</div><div class="line">        [<span class="keyword">self</span> pushSearchViewControllerWithSearchWord:queryString];</div><div class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> ([activity.activityType isEqualToString:CSSearchableItemActionType]) &#123;</div><div class="line">        <span class="built_in">NSString</span> *identifier = [activity.userInfo valueForKey:CSSearchableItemActivityIdentifier];</div><div class="line">        <span class="keyword">if</span> (identifier.intValue) &#123;</div><div class="line">            [<span class="keyword">self</span> pushProductDetailViewControllerWithProductID:identifier];</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            [<span class="keyword">self</span> pushSearchViewControllerWithSearchWord:identifier];</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>Demo里，我在展示ProductDetailViewController时，保存了当前Product的ProductID，并设置identifier为此ProductID，因此用户点击item后取到的identifier正好是productID（这种做法个人并不推荐）</p>
+<p>&gt;<br><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">NSString</span> *content = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"%@ %@"</span>,productInfo.brandName,productInfo.name];</div><div class="line"><span class="comment">//创建SpotlightItemInfo结构体，包含productID等信息</span></div><div class="line">SpotlightItemInfo info = makeSpotlightItemInfoWith(productInfo.name, content, <span class="keyword">self</span>.productId, image);</div><div class="line"><span class="comment">//调用接口保存</span></div><div class="line">[[SpotlightManager sharedManager] saveItemWithInfo:info];</div></pre></td></tr></table></figure></p>
+<p>&gt;<br><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">void</span>)saveItemWithInfo:(SpotlightItemInfo)info &#123;</div><div class="line">    [<span class="keyword">self</span> indexItemWithTitle:info.title image:info.displayImage content:info.content customInfo:info.productID];</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>&gt;<br><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">void</span>)indexItemWithTitle:(<span class="built_in">NSString</span> *)title image:(<span class="built_in">UIImage</span> *)image content:(<span class="built_in">NSString</span> *)content customInfo:(<span class="built_in">NSString</span> *)info &#123;</div><div class="line">    <span class="keyword">if</span> (![CSSearchableIndex isIndexingAvailable]) &#123;</div><div class="line">        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(<span class="number">5</span> * <span class="built_in">NSEC_PER_SEC</span>)), dispatch_get_main_queue(), ^&#123;</div><div class="line">            [MBoxShowHUD showHudWith:<span class="string">@"设备不可支持Spotlight搜索应用内信息"</span> animated:<span class="literal">NO</span> autoHiden:<span class="literal">YES</span>];</div><div class="line">        &#125;);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        CSSearchableItemAttributeSet *attributeSet = [[CSSearchableItemAttributeSet alloc] initWithItemContentType:(<span class="built_in">NSString</span> *)kUTTypeText];</div><div class="line">        attributeSet.title = title;</div><div class="line">        attributeSet.contentDescription = <span class="built_in">NSLocalizedString</span>(content, <span class="literal">nil</span>);</div><div class="line">        <span class="built_in">UIImage</span> *thumbImage = image?:[<span class="built_in">UIImage</span> imageNamed:<span class="string">@"AppIcon"</span>];</div><div class="line">        attributeSet.thumbnailData = <span class="built_in">UIImagePNGRepresentation</span>(thumbImage);</div><div class="line">        attributeSet.keywords = @[title,content,<span class="string">@"美美箱"</span>];</div><div class="line">        CSSearchableItem *item = [[CSSearchableItem alloc] initWithUniqueIdentifier:info domainIdentifier:domainIdentifierKey attributeSet:attributeSet];</div><div class="line">        item.expirationDate = [<span class="built_in">NSDate</span> dateWithTimeIntervalSinceNow:<span class="number">60</span> * <span class="number">60</span>]; <span class="comment">//设置一小时后失效</span></div><div class="line">        [<span class="keyword">self</span> saveSearchableItem:item];</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>&gt;<br><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">void</span>)saveSearchableItem:(CSSearchableItem *)item &#123;</div><div class="line">    [<span class="keyword">self</span>.index indexSearchableItems:@[item] completionHandler:^(<span class="built_in">NSError</span> * _Nullable error) &#123;</div><div class="line">        <span class="keyword">if</span> (error) &#123;</div><div class="line">            DLog(<span class="string">@"%@"</span>,error.description);</div><div class="line">            <span class="built_in">dispatch_async</span>(dispatch_get_main_queue(), ^&#123;</div><div class="line">                [MBoxShowHUD showHudWith:[<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"%s failed"</span>,__func__] animated:<span class="literal">YES</span> autoHiden:<span class="literal">YES</span>];</div><div class="line">            &#125;);</div><div class="line">        &#125;</div><div class="line">    &#125;];</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p><strong>Discussion</strong></p>
+<ul>
+<li>使用CSSearchableIndex保存，删除item索引</li>
+<li>使用CSQueryString查询item并进行删除等操作</li>
+<li>使用<a href="https://developer.apple.com/reference/corespotlight/cssearchableitemattributeset" target="_blank" rel="external">CSSearchableItemAttributeSet</a>设置item的属性</li>
+<li>在合适的时机保存item</li>
+</ul>
+<p><strong>参考</strong></p>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> framework </tag>
+            
+            <tag> iOS </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[申请加急]]></title>
+      <url>/2017/01/14/%E7%94%B3%E8%AF%B7%E5%8A%A0%E6%80%A5/</url>
+      <content type="html"><![CDATA[<p><img src="https://github.com/pjocer/blogSource/blob/master/%E7%94%B3%E8%AF%B7%E5%8A%A0%E6%80%A5/123.png?raw=true" alt=""></p>
+<a id="more"></a>
+<p><img src="https://github.com/pjocer/blogSource/blob/master/%E7%94%B3%E8%AF%B7%E5%8A%A0%E6%80%A5/124.png?raw=true" alt=""></p>
+<p><img src="https://github.com/pjocer/blogSource/blob/master/%E7%94%B3%E8%AF%B7%E5%8A%A0%E6%80%A5/125.png?raw=true" alt=""></p>
+<p><img src="https://github.com/pjocer/blogSource/blob/master/%E7%94%B3%E8%AF%B7%E5%8A%A0%E6%80%A5/126.png?raw=true" alt=""></p>
+<p>现在Apple的申请加急条件比较苛刻，如果公司真的特别急着上线新版本的话，可以告知boss考虑一下淘宝买一个Apple急速上线服务，一千多羊币的价格。</p>
+]]></content>
+      
+        <categories>
+            
+            <category> 随记 </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> Apple </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Build Version自增长]]></title>
+      <url>/2016/06/26/Build-Version%E8%87%AA%E5%A2%9E%E9%95%BF/</url>
+      <content type="html"><![CDATA[<p>参考：<a href="http://wonderffee.github.io/blog/2015/09/24/auto-build-number/" target="_blank" rel="external">Xcode自动生成版本号与根据版本号获取Git提交记录哈希值</a></p>
+<p>以git提交次数作为Build版本号，在每次Build的时候跑以下脚本。</p>
+<a id="more"></a>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#</span><span class="comment"># Set the build number to the current git commit count. # If we're using the Dev scheme, then we'll suffix the b uild</span><span class="comment"># number with the current branch name, to make collision s</span><span class="comment"># far less likely across feature branches.</span><span class="comment"># Based on: http://w3facility.info/question/how-do-i-for ce-xcode-to-rebuild-the-info-plist-file-in-my-project-ev ery-time-i-build-the-project/</span><span class="comment">#</span>git=`sh /etc/profile; which git`appBuild=`<span class="string">"$git"</span> rev-list --all |wc -l`<span class="keyword">if</span> [ $CONFIGURATION = <span class="string">"Debug"</span> ]; thenbranchName=`<span class="string">"$git"</span> rev-parse --abbrev-ref HEAD` /usr/libexec/PlistBuddy -c <span class="string">"Set :CFBundleVersion $appBui ld-$branchName"</span> <span class="string">"$&#123;TARGET_BUILD_DIR&#125;/$&#123;INFOPLIST_PATH&#125;"</span> <span class="keyword">else</span>/usr/libexec/PlistBuddy -c <span class="string">"Set :CFBundleVersion $appBui ld"</span> <span class="string">"$&#123;TARGET_BUILD_DIR&#125;/$&#123;INFOPLIST_PATH&#125;"</span>fiecho <span class="string">"Updated $&#123;TARGET_BUILD_DIR&#125;/$&#123;INFOPLIST_PATH&#125;"</span></div></pre></td></tr></table></figure>
+<p>但是可能不同机器上打包出来的Build版本号不一样。因为git clone的时候可以全量clone，也可以shallow clone，导致下面这条命令得出来的数字不一样。</p>
+<p><code>git rev-list --all | wc -l</code></p>
+<p>可以用下面这条命令替换</p>
+<p><code>git rev-list --count HEAD</code></p>
+]]></content>
+      
+        <categories>
+            
+            <category> 随记 </category>
+            
+            <category> iOS </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> Xcode </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[HTTPS总结]]></title>
+      <url>/2016/05/13/HTTPS%E6%80%BB%E7%BB%93/</url>
+      <content type="html"><![CDATA[<h2 id="HTTP存在的问题"><a href="#HTTP存在的问题" class="headerlink" title="HTTP存在的问题"></a>HTTP存在的问题</h2><p><a href="https://zh.wikipedia.org/wiki/%E4%B8%87%E7%BB%B4%E7%BD%91%E8%81%94%E7%9B%9F" target="_blank" rel="external">W3C</a>和<a href="https://zh.wikipedia.org/wiki/%E4%BA%92%E8%81%94%E7%BD%91%E5%B7%A5%E7%A8%8B%E4%BB%BB%E5%8A%A1%E7%BB%84" target="_blank" rel="external">IETF</a>设计HTTP协议的时候没有考虑安全问题，导致使用HTTP协议通信时会出现以下三个问题：</p>
+<ul>
+<li><strong>窃听</strong></li>
+<li><strong>伪装</strong></li>
+<li><strong>中间人攻击</strong></li>
+</ul>
+<a id="more"></a>
+<h3 id="窃听"><a href="#窃听" class="headerlink" title="窃听"></a>窃听</h3><p>窃听相同IP段上的通信并非难事，只需要收集在互联上流动的数据包就行。抓包工具(Packet Capture)或嗅探器(Sniffer)可以解析收集的数据包。</p>
+<p>常用的抓包工具Wireshark、Charles、Fiddler，还有Linux下的Aircrack-ng破解Wi-Fi之前也必须先进行抓包;</p>
+<p><img src="https://github.com/pjocer/blogSource/blob/master/HTTPS%E6%80%BB%E7%BB%93/%E7%AA%83%E5%90%AC.png?raw=true" alt=""></p>
+<h3 id="伪装"><a href="#伪装" class="headerlink" title="伪装"></a>伪装</h3><p>HTTP协议中的请求和响应都不会对通信双方进行身份确认，所以客户端和服务器都可能是伪装过的，无法确定正在通信的对方是否具有访问权限。</p>
+<p><img src="https://github.com/pjocer/blogSource/blob/master/HTTPS%E6%80%BB%E7%BB%93/%E4%BC%AA%E8%A3%85.png?raw=true" alt=""></p>
+<h3 id="中间人攻击"><a href="#中间人攻击" class="headerlink" title="中间人攻击"></a>中间人攻击</h3><p>HTTP协议无法证明通信的完整性，获取到的数据可能是被精心篡改过的。</p>
+<p><img src="https://github.com/pjocer/blogSource/blob/master/HTTPS%E6%80%BB%E7%BB%93/%E4%B8%AD%E9%97%B4%E4%BA%BA%E6%94%BB%E5%87%BB.png?raw=true" alt=""></p>
+<h2 id="HTTPS-HTTP-SSL-TLS"><a href="#HTTPS-HTTP-SSL-TLS" class="headerlink" title="HTTPS = HTTP + SSL/TLS"></a>HTTPS = HTTP + SSL/TLS</h2><h3 id="HTTPS的结构"><a href="#HTTPS的结构" class="headerlink" title="HTTPS的结构"></a>HTTPS的结构</h3><p>HTTPS在HTTP的基础上增加了SSL/TLS，弥补 HTTP存在的3个安全缺陷。HTTP和HTTPS的结构如下:</p>
+<p><img src="https://github.com/pjocer/blogSource/blob/master/HTTPS%E6%80%BB%E7%BB%93/HTTP%E7%BB%93%E6%9E%84.png?raw=true" alt=""></p>
+<h3 id="SSL-TLS"><a href="#SSL-TLS" class="headerlink" title="SSL/TLS"></a>SSL/TLS</h3><ol>
+<li>SSL/TLS为互联网通信提供安全及数据完整性保障，SSL是TLS的前身;</li>
+<li>1994 ，NetScape设计了SSL协议，未发布;</li>
+<li>1995 ，NetScape发布了SSL2.0版本，有严重安全漏洞;</li>
+<li>1996 ，SSL3.0问世，得到大量应用;</li>
+<li>1999 ，IETF接手SSL，发布了SSL的升级版TLS;</li>
+<li>2014 ，Google发布SSL3.0中的设计缺陷，建议禁止此协议;</li>
+<li>TLS1.0 ≈ SSL3.0、TLS1.1 ≈ SSL3.1、TLS1.2 ≈ SSL3.2;</li>
+</ol>
+<h2 id="解决HTTP的问题"><a href="#解决HTTP的问题" class="headerlink" title="解决HTTP的问题"></a>解决HTTP的问题</h2><ol>
+<li>加密</li>
+<li>数字证书认证</li>
+<li>完整性校验（数字签名）</li>
+</ol>
+<h3 id="加密"><a href="#加密" class="headerlink" title="加密"></a>加密</h3><p>对通信内容使用加密算法和秘钥进行加密，然后用加密后的内容进行通信，这样即使通信内容被窃听，没有秘钥(及时加密算法公开)，就无法解密。</p>
+<h4 id="对称秘钥加密技术"><a href="#对称秘钥加密技术" class="headerlink" title="对称秘钥加密技术"></a>对称秘钥加密技术</h4><ul>
+<li>加密、解密使用同一个密钥;</li>
+<li>加密、解密速度快；</li>
+<li>如何将同一个密钥交给通信双方是个问题;</li>
+<li>DES、3-DES、AES、RC5、RC6;</li>
+</ul>
+<h4 id="对称-公开-密钥加密技术"><a href="#对称-公开-密钥加密技术" class="headerlink" title="对称(公开)密钥加密技术"></a>对称(公开)密钥加密技术</h4><ul>
+<li>加密、解密不使用同一个密钥，分公钥、私钥;</li>
+<li>公钥公开，私钥自己保存;</li>
+<li>公钥可以解密私钥加密的内容，私钥可以解密公钥加密的内容;</li>
+<li>加密、解密速度慢;</li>
+<li>RSA；</li>
+</ul>
+<p><img src="https://github.com/pjocer/blogSource/blob/master/HTTPS%E6%80%BB%E7%BB%93/%E5%8A%A0%E5%AF%86.png?raw=true" alt=""></p>
+<p><strong>HTTPS使用混合加密机制</strong></p>
+<blockquote>
+<p>先用非对称密钥加密技术建立通信，间接交换对称密钥，然后用对称密钥加密。下面有详细介绍。</p>
+</blockquote>
+<h3 id="数字签名"><a href="#数字签名" class="headerlink" title="数字签名"></a>数字签名</h3><p>利用数字签名就可以对通信内容进行完整性校验。</p>
+<p>数字证书也用到了数字签名，所以先说数字签名。看图:</p>
+<p><img src="https://github.com/pjocer/blogSource/blob/master/HTTPS%E6%80%BB%E7%BB%93/%E7%AD%BE%E5%90%8D.png?raw=true" alt=""></p>
+<h3 id="数字证书"><a href="#数字证书" class="headerlink" title="数字证书"></a>数字证书</h3><p>先看数字证书的构成:</p>
+<p><img src="https://github.com/pjocer/blogSource/blob/master/HTTPS%E6%80%BB%E7%BB%93/%E6%95%B0%E5%AD%97%E8%AF%81%E4%B9%A6.png?raw=true" alt=""></p>
+<p>擦，写了一堆还是描述不清楚，看图:</p>
+<p><img src="https://github.com/pjocer/blogSource/blob/master/HTTPS%E6%80%BB%E7%BB%93/%E6%95%B0%E5%AD%97%E8%AF%81%E4%B9%A6-%E8%A7%A3%E5%AF%86.png?raw=true" alt=""></p>
+<h2 id="HTTPS通信流程"><a href="#HTTPS通信流程" class="headerlink" title="HTTPS通信流程"></a>HTTPS通信流程</h2><p>So, At last. HTTPS的完整通信流程</p>
+<p><img src="https://github.com/pjocer/blogSource/blob/master/HTTPS%E6%80%BB%E7%BB%93/HTTPS%E9%80%9A%E4%BF%A1%E6%B5%81%E7%A8%8B.png?raw=true" alt=""></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li>《HTTP权威指南》 </li>
+<li>《图解HTTP》</li>
+<li><a href="http://www.ruanyifeng.com/blog/2013/06/rsa_algorithm_part_one.html" target="_blank" rel="external">RSA part1</a></li>
+<li><a href="http://www.ruanyifeng.com/blog/2013/07/rsa_algorithm_part_two.html" target="_blank" rel="external">RSA part2</a></li>
+<li>维基百科</li>
+<li><a href="https://http2.github.io/" target="_blank" rel="external">HTTP2</a></li>
+<li><a href="https://http2.github.io/faq/#what-are-the-key-differences-to-http1x" target="_blank" rel="external">HTTP/2 Frequently Asked Questions</a></li>
+<li><a href="http://blog.devtang.com/2015/11/14/charles-introduction/" target="_blank" rel="external">Charles从入门到精通</a></li>
+</ul>
+]]></content>
+      
+        <categories>
+            
+            <category> extention </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> HTTPS </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[RAC API个人总结(二)]]></title>
+      <url>/2016/04/24/RAC-API%E4%B8%AA%E4%BA%BA%E6%80%BB%E7%BB%93-%E4%BA%8C/</url>
+      <content type="html"><![CDATA[<h1 id="RACScheduler和RACSequence"><a href="#RACScheduler和RACSequence" class="headerlink" title="RACScheduler和RACSequence"></a>RACScheduler和RACSequence</h1><hr>
+<h2 id="RACScheduler"><a href="#RACScheduler" class="headerlink" title="RACScheduler"></a>RACScheduler</h2><p><code>RACScheduler</code>作为调度器，底层只是对GCD的简单的封装，下面是<code>RACScheduler</code>的类簇图：</p>
+<p><img src="https://raw.githubusercontent.com/pjocer/blogSource/master/RAC-API%E4%B8%AA%E4%BA%BA%E6%80%BB%E7%BB%93-%E4%BA%8C/RACScheduler.png" alt="RACScheduler"></p>
+<a id="more"></a>
+<p><code>RACScheduler</code>的子类：</p>
+<blockquote>
+<ul>
+<li>immediateScheduler：仅仅是一个单例类，作为同步调度器；</li>
+<li>RACQueueScheduler：一个抽象类，在一个串行队列中实现异步调用。<br>  一般使用它的子类RACTargetQueueScheduler；</li>
+<li>RACTargetQueueScheduler：继承于RACQueueScheduler，在一个串行队列中实现异步调用。</li>
+<li>RACSubscriptionScheduler：一个用来调度订阅的调度器。底层生成了_backgroundScheduler，而<br>_backgroundScheduler是通过RACTargetQueueScheduler生成的，因此RACSubscriptionScheduler<br>其实也是间接调用了RACTargetQueueScheduler。</li>
+</ul>
+</blockquote>
+<p>可以看到<code>RACScheduler</code>还是挺简单的。下面分三部分剖析<code>RACScheduler</code>：</p>
+<blockquote>
+<ul>
+<li>RACScheduler生成的一般调度器；</li>
+<li>RACScheduler生成的定时器；</li>
+<li>RACScheduler的递归调度scheduleRecursiveBlock；</li>
+</ul>
+</blockquote>
+<p><code>RACScheduler</code>的生成的一般调度器有哪些？</p>
+<blockquote>
+<ul>
+<li>immediateScheduler</li>
+<li>mainThreadScheduler</li>
+<li>scheduler</li>
+</ul>
+</blockquote>
+<h4 id="immediateScheduler"><a href="#immediateScheduler" class="headerlink" title="immediateScheduler"></a>immediateScheduler</h4><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">+ (<span class="keyword">instancetype</span>)immediateScheduler &#123;</div><div class="line">    <span class="keyword">static</span> <span class="built_in">dispatch_once_t</span> onceToken;</div><div class="line">    <span class="keyword">static</span> RACScheduler *immediateScheduler;</div><div class="line">    <span class="built_in">dispatch_once</span>(&amp;onceToken, ^&#123;</div><div class="line">        immediateScheduler = [[RACImmediateScheduler alloc] init];</div><div class="line">    &#125;);</div><div class="line">    <span class="keyword">return</span> immediateScheduler;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看出immediateScheduler是一个单例类，因为immediateScheduler并没有用到CGD的相关操作，可以认为它是一个同步的调度器。</p>
+<h4 id="mainThreadScheduler"><a href="#mainThreadScheduler" class="headerlink" title="mainThreadScheduler"></a>mainThreadScheduler</h4><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">+ (<span class="keyword">instancetype</span>)mainThreadScheduler &#123;</div><div class="line">    <span class="keyword">static</span> <span class="built_in">dispatch_once_t</span> onceToken;</div><div class="line">    <span class="keyword">static</span> RACScheduler *mainThreadScheduler;</div><div class="line">    <span class="built_in">dispatch_once</span>(&amp;onceToken, ^&#123;</div><div class="line">        mainThreadScheduler = [[RACTargetQueueScheduler alloc] initWithName:<span class="string">@"com.ReactiveCocoa.RACScheduler.mainThreadScheduler"</span> targetQueue:dispatch_get_main_queue()];</div><div class="line">    &#125;);</div><div class="line">    <span class="keyword">return</span> mainThreadScheduler;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>mainThreadScheduler也是单例类，看一下initWithName:targetQueue:的实现：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">id</span>)initWithName:(<span class="built_in">NSString</span> *)name targetQueue:(<span class="built_in">dispatch_queue_t</span>)targetQueue &#123;</div><div class="line">    <span class="built_in">NSCParameterAssert</span>(targetQueue != <span class="literal">NULL</span>);</div><div class="line">    <span class="keyword">if</span> (name == <span class="literal">nil</span>) &#123;</div><div class="line">        name = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"com.ReactiveCocoa.RACTargetQueueScheduler(%s)"</span>, dispatch_queue_get_label(targetQueue)];</div><div class="line">    &#125;</div><div class="line">    <span class="built_in">dispatch_queue_t</span> queue = dispatch_queue_create(name.UTF8String, DISPATCH_QUEUE_SERIAL);</div><div class="line">    <span class="keyword">if</span> (queue == <span class="literal">NULL</span>) <span class="keyword">return</span> <span class="literal">nil</span>;</div><div class="line">    dispatch_set_target_queue(queue, targetQueue);</div><div class="line">    <span class="keyword">return</span> [<span class="keyword">super</span> initWithName:name queue:queue];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>dispatch_set_target_queue一般有两个作用：</p>
+<ul>
+<li>用来给新建的queue设置优先级和targetQueue的相同；</li>
+<li>修改用户队列的目标队列；</li>
+</ul>
+<p>显然这里是把新建的queue加入dispatch_get_main_queue()中，因此可以理解mainThreadScheduler是任务运行在主队列中的调度器。</p>
+<h4 id="scheduler"><a href="#scheduler" class="headerlink" title="scheduler"></a>scheduler</h4><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">+ (<span class="keyword">instancetype</span>)scheduler &#123;</div><div class="line">    <span class="keyword">return</span> [<span class="keyword">self</span> schedulerWithPriority:RACSchedulerPriorityDefault];</div><div class="line">&#125;</div><div class="line">+ (<span class="keyword">instancetype</span>)schedulerWithPriority:(RACSchedulerPriority)priority &#123;</div><div class="line">    <span class="keyword">return</span> [<span class="keyword">self</span> schedulerWithPriority:priority name:<span class="string">@"com.ReactiveCocoa.RACScheduler.backgroundScheduler"</span>];</div><div class="line">&#125;</div><div class="line">+ (<span class="keyword">instancetype</span>)schedulerWithPriority:(RACSchedulerPriority)priority name:(<span class="built_in">NSString</span> *)name &#123;</div><div class="line">    <span class="keyword">return</span> [[RACTargetQueueScheduler alloc] initWithName:name targetQueue:dispatch_get_global_queue(priority, <span class="number">0</span>)];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>显然，scheduler是任务运行在dispatch_get_global_queue(priority, 0)的调度器，是一个串行的异步队列。</p>
+<h4 id="RACScheduler的生成的定时器"><a href="#RACScheduler的生成的定时器" class="headerlink" title="RACScheduler的生成的定时器"></a>RACScheduler的生成的定时器</h4><p>RACScheduler定时的方法主要有两个：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">- (RACDisposable *)after:(<span class="built_in">NSDate</span> *)date schedule:(<span class="keyword">void</span> (^)(<span class="keyword">void</span>))block &#123;</div><div class="line">    RACDisposable *disposable = [[RACDisposable alloc] init];</div><div class="line">    dispatch_after([<span class="keyword">self</span>.class wallTimeWithDate:date], <span class="keyword">self</span>.queue, ^&#123;</div><div class="line">        <span class="keyword">if</span> (disposable.disposed) <span class="keyword">return</span>;</div><div class="line">        [<span class="keyword">self</span> performAsCurrentScheduler:block];</div><div class="line">    &#125;);</div><div class="line">    <span class="keyword">return</span> disposable;</div><div class="line">&#125;</div><div class="line">- (RACDisposable *)after:(<span class="built_in">NSDate</span> *)date repeatingEvery:(<span class="built_in">NSTimeInterval</span>)interval withLeeway:(<span class="built_in">NSTimeInterval</span>)leeway schedule:(<span class="keyword">void</span> (^)(<span class="keyword">void</span>))block &#123;</div><div class="line">    uint64_t intervalInNanoSecs = (uint64_t)(interval * <span class="built_in">NSEC_PER_SEC</span>);</div><div class="line">    uint64_t leewayInNanoSecs = (uint64_t)(leeway * <span class="built_in">NSEC_PER_SEC</span>);</div><div class="line">    dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, <span class="number">0</span>, <span class="number">0</span>, <span class="keyword">self</span>.queue);</div><div class="line">    dispatch_source_set_timer(timer, [<span class="keyword">self</span>.class wallTimeWithDate:date], intervalInNanoSecs, leewayInNanoSecs);</div><div class="line">    dispatch_source_set_event_handler(timer, block);</div><div class="line">    dispatch_resume(timer); </div><div class="line">    <span class="keyword">return</span> [RACDisposable disposableWithBlock:^&#123;</div><div class="line">        dispatch_source_cancel(timer);</div><div class="line">    &#125;];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>after:schedule:直接就是调用dispatch_after实现的，没什么好说的；<br>after:repeatingEvery:withLeeway:schedule:则是通过dispatch_source_t实现的，也没什么好说的。OK，RACScheduler的定时器就这样了。</p>
+<h4 id="RACScheduler的递归调度scheduleRecursiveBlock"><a href="#RACScheduler的递归调度scheduleRecursiveBlock" class="headerlink" title="RACScheduler的递归调度scheduleRecursiveBlock"></a>RACScheduler的递归调度scheduleRecursiveBlock</h4><p>为什么要说scheduleRecursiveBlock？因为在RACSequence内部的很多操作都是通过scheduleRecursiveBlock来完成的，如果要理解RACSequence，那么理解scheduleRecursiveBlock必不可少。<br>先说一个例子：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">    <span class="built_in">NSMutableArray</span> *numbers = [[<span class="built_in">NSMutableArray</span> alloc] init];</div><div class="line">    <span class="keyword">for</span> (<span class="built_in">NSInteger</span> i = <span class="number">0</span>; i &lt; <span class="number">3</span>; i++) &#123;</div><div class="line">        [numbers addObject:[<span class="built_in">NSNumber</span> numberWithInteger:i]];</div><div class="line">    &#125;</div><div class="line">    [numbers.rac_sequence.signal subscribeNext:^(<span class="keyword">id</span> x) &#123;    <span class="comment">//(1)</span></div><div class="line">        <span class="built_in">NSLog</span>(<span class="string">@"%@"</span>,x);           <span class="comment">//(2)</span></div><div class="line">    &#125;];</div><div class="line">结果打印：</div><div class="line"><span class="number">0</span></div><div class="line"><span class="number">1</span></div><div class="line"><span class="number">2</span></div></pre></td></tr></table></figure>
+<p>RACSequence封装了集合的链式操作，用处是非常大的，下篇会结合几个例子说明RACSequence，下面先看源码：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div></pre></td><td class="code"><pre><div class="line">- (RACSignal *)signal &#123;</div><div class="line">    <span class="keyword">return</span> [[<span class="keyword">self</span> signalWithScheduler:[RACScheduler scheduler]] setNameWithFormat:<span class="string">@"[%@] -signal"</span>, <span class="keyword">self</span>.name];</div><div class="line">&#125;</div><div class="line">- (RACSignal *)signalWithScheduler:(RACScheduler *)scheduler &#123;</div><div class="line">    <span class="keyword">return</span> [RACSignal createSignal:^(<span class="keyword">id</span>&lt;RACSubscriber&gt; subscriber) &#123;  <span class="comment">//(2)</span></div><div class="line">        __block RACSequence *sequence = <span class="keyword">self</span>;       </div><div class="line">        <span class="keyword">return</span> [scheduler scheduleRecursiveBlock:^(<span class="keyword">void</span> (^reschedule)(<span class="keyword">void</span>)) &#123;<span class="comment">//(3)</span></div><div class="line">            <span class="keyword">if</span> (sequence.head == <span class="literal">nil</span>) &#123;</div><div class="line">                [subscriber sendCompleted];  <span class="comment">//(4)</span></div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            &#125;</div><div class="line">            [subscriber sendNext:sequence.head];  <span class="comment">//(5)</span></div><div class="line">            sequence = sequence.tail;     <span class="comment">//(6)</span></div><div class="line">            reschedule();       <span class="comment">//(7)</span></div><div class="line">        &#125;];</div><div class="line">    &#125;] ;</div><div class="line">&#125;</div><div class="line">- (<span class="keyword">void</span>)scheduleRecursiveBlock:(RACSchedulerRecursiveBlock)recursiveBlock addingToDisposable:(RACCompoundDisposable *)disposable &#123;</div><div class="line">        [<span class="keyword">self</span> schedule:^&#123;          <span class="comment">//(8)</span></div><div class="line">            <span class="keyword">void</span> (^reallyReschedule)(<span class="keyword">void</span>) = ^&#123;  <span class="comment">//(9)</span></div><div class="line">                [<span class="keyword">self</span> scheduleRecursiveBlock:recursiveBlock addingToDisposable:disposable];</div><div class="line">            &#125;;</div><div class="line">            __block <span class="built_in">NSLock</span> *lock = [[<span class="built_in">NSLock</span> alloc] init];</div><div class="line">            lock.name = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"%@ %s"</span>, <span class="keyword">self</span>, sel_getName(_cmd)];</div><div class="line"></div><div class="line">            __block <span class="built_in">NSUInteger</span> rescheduleCount = <span class="number">0</span>;</div><div class="line">            __block <span class="built_in">BOOL</span> rescheduleImmediately = <span class="literal">NO</span>;</div><div class="line">                recursiveBlock(^&#123;        <span class="comment">//(10)</span></div><div class="line">                    [lock lock];         <span class="comment">//(11)</span></div><div class="line">                    <span class="built_in">BOOL</span> immediate = rescheduleImmediately;</div><div class="line">                    <span class="keyword">if</span> (!immediate) ++rescheduleCount;</div><div class="line">                    [lock unlock];</div><div class="line">                    <span class="keyword">if</span> (immediate) reallyReschedule();</div><div class="line">                &#125;);</div><div class="line">            &#125;</div><div class="line">            [lock lock];</div><div class="line">            <span class="built_in">NSUInteger</span> synchronousCount = rescheduleCount;</div><div class="line">            rescheduleImmediately = <span class="literal">YES</span>;</div><div class="line">            [lock unlock];</div><div class="line"></div><div class="line">            <span class="keyword">for</span> (<span class="built_in">NSUInteger</span> i = <span class="number">0</span>; i &lt; synchronousCount; i++) &#123;</div><div class="line">                reallyReschedule();   <span class="comment">//(12)</span></div><div class="line">            &#125;</div><div class="line">        &#125;];</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在(1)处订阅时，会执行didSubscribe，即(2)处的block，然后到(8)处，经过上面调度器的分析，我们知道schedule是一个串行异步的调度器，因此会在下一个RunLoop执行schedule的代码块。当执行到(10)处时，执行recursiveBlock，我们知道递归包含三个条件：</p>
+<ul>
+<li><strong>递归的初始条件；</strong></li>
+<li><strong>递归函数；</strong></li>
+<li><strong>递归的结束条件；</strong></li>
+</ul>
+<p>recursiveBlock就是封装了递归的结束条件，因此递归的结束条件是调度器递归结束的核心。<br>RACSequence的内部存储结构就像一个单链表，有两个指针head和tail，head指针指向了当前链表的第一个元素，tail指向head指针下一个元素；根据RACSequence是否还有内容来判断是否还需要递归遍历RACSequence（将数组中的元素一个一个发出去），如果RACSequence还有内容，则继续递归，否则信号发送sendCompleted事件，结束整个遍历的过程。<br>代码(10)处要注意一下，先执行scheduleRecursiveBlock:传进来的参数recursiveBlock，然后在recursiveBlock中执行reschedule—这里有点绕。<br>在(12)处，如果递归结束了，synchronousCount=0，因此整个递归也就结束了。<br>RACScheduler的源码分析结束~~</p>
+<h2 id="RACSequence"><a href="#RACSequence" class="headerlink" title="RACSequence"></a>RACSequence</h2><figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">RACSequence</span> : <span class="title">RACStream</span> &lt;<span class="title">NSCoding</span>, <span class="title">NSCopying</span>, <span class="title">NSFastEnumeration</span>&gt;</span></div><div class="line"></div><div class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>, <span class="keyword">strong</span>, <span class="keyword">readonly</span>) <span class="keyword">id</span> head;</div><div class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>, <span class="keyword">strong</span>, <span class="keyword">readonly</span>) RACSequence *tail;</div><div class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>, <span class="keyword">copy</span>, <span class="keyword">readonly</span>) <span class="built_in">NSArray</span> *array;</div><div class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>, <span class="keyword">copy</span>, <span class="keyword">readonly</span>) <span class="built_in">NSEnumerator</span> *objectEnumerator;</div><div class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>, <span class="keyword">copy</span>, <span class="keyword">readonly</span>) RACSequence *eagerSequence;</div><div class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>, <span class="keyword">copy</span>, <span class="keyword">readonly</span>) RACSequence *lazySequence;</div><div class="line"><span class="keyword">@end</span></div></pre></td></tr></table></figure>
+<p><code>RACSequence</code>是<code>RACStream</code>的子类，主要是<code>ReactiveCocoa</code>里面的集合类。</p>
+<p>先来说说关于<code>RACSequence</code>的一些概念。</p>
+<p><code>RACSequence</code>有两个很重要的属性就是<code>head</code>和<code>tail</code>。<code>head</code>是一个id，而<code>tail</code>又是一个<code>RACSequence</code>，这个定义有点递归的意味。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">    RACSequence *sequence = [RACSequence sequenceWithHeadBlock:^<span class="keyword">id</span>&#123;</div><div class="line">        <span class="keyword">return</span> @(<span class="number">1</span>);</div><div class="line">    &#125; tailBlock:^RACSequence *&#123;</div><div class="line">        <span class="keyword">return</span> @[@<span class="number">2</span>,@<span class="number">3</span>,@<span class="number">4</span>].rac_sequence;</div><div class="line">    &#125;];</div><div class="line"></div><div class="line">    <span class="built_in">NSLog</span>(<span class="string">@"sequence.head = %@ , sequence.tail =  %@"</span>,sequence.head ,sequence.tail);</div><div class="line"></div><div class="line">输出:</div><div class="line">sequence.head = <span class="number">1</span> , sequence.tail =  &lt;RACArraySequence: <span class="number">0x608000223920</span>&gt;&#123; name = , array = (</div><div class="line">    <span class="number">2</span>,</div><div class="line">    <span class="number">3</span>,</div><div class="line">    <span class="number">4</span></div><div class="line">) &#125;</div></pre></td></tr></table></figure>
+<p>这段测试代码就道出了head和tail的定义。更加详细的描述见下图：</p>
+<p><img src="https://github.com/pjocer/blogSource/blob/master/RAC-API%E4%B8%AA%E4%BA%BA%E6%80%BB%E7%BB%93-%E4%BA%8C/RACSequence.png?raw=true" alt="RACSequence"></p>
+<p>上述代码里面用到了RACSequence初始化的方法，具体的分析见后面。</p>
+<p>objectEnumerator是一个快速枚举器。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">RACSequenceEnumerator</span> : <span class="title">NSEnumerator</span></span></div><div class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>, <span class="keyword">strong</span>) RACSequence *sequence;</div><div class="line"><span class="keyword">@end</span></div></pre></td></tr></table></figure>
+<p>之所以需要实现这个，是为了更加方便的RACSequence进行遍历。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">id</span>)nextObject &#123;</div><div class="line">    <span class="keyword">id</span> object = <span class="literal">nil</span>;</div><div class="line"></div><div class="line">    <span class="keyword">@synchronized</span> (<span class="keyword">self</span>) &#123;</div><div class="line">        object = <span class="keyword">self</span>.sequence.head;</div><div class="line">        <span class="keyword">self</span>.sequence = <span class="keyword">self</span>.sequence.tail;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> object;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>有了这个NSEnumerator，就可以从RACSequence的head一直遍历到tail。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">- (<span class="built_in">NSEnumerator</span> *)objectEnumerator &#123;</div><div class="line">    RACSequenceEnumerator *enumerator = [[RACSequenceEnumerator alloc] init];</div><div class="line">    enumerator.sequence = <span class="keyword">self</span>;</div><div class="line">    <span class="keyword">return</span> enumerator;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>回到RACSequence的定义里面的objectEnumerator，这里就是取出内部的RACSequenceEnumerator。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">- (<span class="built_in">NSArray</span> *)array &#123;</div><div class="line">    <span class="built_in">NSMutableArray</span> *array = [<span class="built_in">NSMutableArray</span> array];</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">id</span> obj <span class="keyword">in</span> <span class="keyword">self</span>) &#123;</div><div class="line">        [array addObject:obj];</div><div class="line">    &#125;   </div><div class="line">    <span class="keyword">return</span> [array <span class="keyword">copy</span>];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>RACSequence的定义里面还有一个array，这个数组就是返回一个NSArray，这个数组里面装满了RACSequence里面所有的对象。这里之所以能用for-in，是因为实现了NSFastEnumeration协议。至于for-in的效率，完全就看重写NSFastEnumeration协议里面countByEnumeratingWithState: objects: count: 方法里面的执行效率了。</p>
+<p>在分析RACSequence的for-in执行效率之前，先回顾一下NSFastEnumerationState的定义，这里的属性在接下来的实现中会被大量使用。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> &#123;</div><div class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> state; <span class="comment">//可以被自定义成任何有意义的变量</span></div><div class="line">    <span class="keyword">id</span> __<span class="keyword">unsafe_unretained</span> _Nullable * _Nullable itemsPtr;  <span class="comment">//返回对象数组的首地址</span></div><div class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> * _Nullable mutationsPtr;  <span class="comment">//指向会随着集合变动而变化的一个值</span></div><div class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> extra[<span class="number">5</span>]; <span class="comment">//可以被自定义成任何有意义的数组</span></div><div class="line">&#125; <span class="built_in">NSFastEnumerationState</span>;</div></pre></td></tr></table></figure>
+<p>接下来要分析的这个函数的入参，stackbuf是为for-in提供的对象数组，len是该数组的长度。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div></pre></td><td class="code"><pre><div class="line">- (<span class="built_in">NSUInteger</span>)countByEnumeratingWithState:(<span class="built_in">NSFastEnumerationState</span> *)state objects:(__<span class="keyword">unsafe_unretained</span> <span class="keyword">id</span> *)stackbuf count:(<span class="built_in">NSUInteger</span>)len &#123;</div><div class="line">    <span class="comment">// 定义完成时候的状态为state = ULONG_MAX</span></div><div class="line">    <span class="keyword">if</span> (state-&gt;state == ULONG_MAX) &#123;</div><div class="line">        <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">// 由于我们需要遍历sequence多次，所以这里定义state字段来记录sequence的首地址</span></div><div class="line">    RACSequence *(^getSequence)(<span class="keyword">void</span>) = ^&#123;</div><div class="line">        <span class="keyword">return</span> (__bridge RACSequence *)(<span class="keyword">void</span> *)state-&gt;state;</div><div class="line">    &#125;;</div><div class="line"></div><div class="line">    <span class="keyword">void</span> (^setSequence)(RACSequence *) = ^(RACSequence *sequence) &#123;</div><div class="line">        <span class="comment">// 释放老的sequence</span></div><div class="line">        <span class="built_in">CFBridgingRelease</span>((<span class="keyword">void</span> *)state-&gt;state);</div><div class="line">        <span class="comment">// 保留新的sequence，把sequence的首地址存放入state中</span></div><div class="line">        state-&gt;state = (<span class="keyword">unsigned</span> <span class="keyword">long</span>)<span class="built_in">CFBridgingRetain</span>(sequence);</div><div class="line">    &#125;;</div><div class="line"></div><div class="line">    <span class="keyword">void</span> (^complete)(<span class="keyword">void</span>) = ^&#123;</div><div class="line">        <span class="comment">// 释放sequence，并把state置为完成态</span></div><div class="line">        setSequence(<span class="literal">nil</span>);</div><div class="line">        state-&gt;state = ULONG_MAX;</div><div class="line">    &#125;;</div><div class="line"></div><div class="line">    <span class="comment">// state == 0是第一次调用时候的初始值</span></div><div class="line">    <span class="keyword">if</span> (state-&gt;state == <span class="number">0</span>) &#123;</div><div class="line">        <span class="comment">// 在遍历过程中，如果Sequence不再发生变化，那么就让mutationsPtr指向一个定值，指向extra数组的首地址</span></div><div class="line">        state-&gt;mutationsPtr = state-&gt;extra;</div><div class="line">        <span class="comment">// 再次刷新state的值</span></div><div class="line">        setSequence(<span class="keyword">self</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">// 将会把返回的对象放进stackbuf中，因此用itemsPtr指向它</span></div><div class="line">    state-&gt;itemsPtr = stackbuf;</div><div class="line"></div><div class="line">    <span class="built_in">NSUInteger</span> enumeratedCount = <span class="number">0</span>;</div><div class="line">    <span class="keyword">while</span> (enumeratedCount &lt; len) &#123;</div><div class="line">        RACSequence *seq = getSequence();</div><div class="line">        <span class="comment">// 由于sequence可能是懒加载生成的，所以需要防止在遍历器enumerator遍历到它们的时候被释放了</span></div><div class="line"></div><div class="line">        __autoreleasing <span class="keyword">id</span> obj = seq.head;</div><div class="line"></div><div class="line">        <span class="comment">// 没有头就结束遍历</span></div><div class="line">        <span class="keyword">if</span> (obj == <span class="literal">nil</span>) &#123;</div><div class="line">            complete();</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        &#125;</div><div class="line">        <span class="comment">// 遍历sequence，每次取出来的head都放入stackbuf数组中。</span></div><div class="line">        stackbuf[enumeratedCount++] = obj;</div><div class="line"></div><div class="line">        <span class="comment">// 没有尾就是完成遍历</span></div><div class="line">        <span class="keyword">if</span> (seq.tail == <span class="literal">nil</span>) &#123;</div><div class="line">            complete();</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="comment">// 取出tail以后，这次遍历结束的tail，即为下次遍历的head，设置seq.tail为Sequence的head，为下次循环做准备</span></div><div class="line">        setSequence(seq.tail);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> enumeratedCount;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>整个遍历的过程类似递归的过程，从头到尾依次遍历一遍。</p>
+<p>再来研究研究RACSequence的初始化：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">+ (RACSequence *)sequenceWithHeadBlock:(<span class="keyword">id</span> (^)(<span class="keyword">void</span>))headBlock tailBlock:(RACSequence *(^)(<span class="keyword">void</span>))tailBlock;</div><div class="line"></div><div class="line">+ (RACSequence *)sequenceWithHeadBlock:(<span class="keyword">id</span> (^)(<span class="keyword">void</span>))headBlock tailBlock:(RACSequence *(^)(<span class="keyword">void</span>))tailBlock &#123;</div><div class="line">   <span class="keyword">return</span> [[RACDynamicSequence sequenceWithHeadBlock:headBlock tailBlock:tailBlock] setNameWithFormat:<span class="string">@"+sequenceWithHeadBlock:tailBlock:"</span>];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>初始化RACSequence，会调用RACDynamicSequence。这里有点类比RACSignal的RACDynamicSignal。</p>
+<p>再来看看RACDynamicSequence的定义。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">RACDynamicSequence</span> () </span>&#123;</div><div class="line">    <span class="keyword">id</span> _head;</div><div class="line">    RACSequence *_tail;</div><div class="line">    <span class="keyword">id</span> _dependency;</div><div class="line">&#125;</div><div class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>, <span class="keyword">strong</span>) <span class="keyword">id</span> headBlock;</div><div class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>, <span class="keyword">strong</span>) <span class="keyword">id</span> tailBlock;</div><div class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>, <span class="keyword">assign</span>) <span class="built_in">BOOL</span> hasDependency;</div><div class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>, <span class="keyword">strong</span>) <span class="keyword">id</span> (^dependencyBlock)(<span class="keyword">void</span>);</div><div class="line"></div><div class="line"><span class="keyword">@end</span></div></pre></td></tr></table></figure>
+<p>这里需要说明的是此处的headBlock，tailBlock，dependencyBlock的修饰符都是用了strong，而不是copy。这里是一个很奇怪的bug导致的。在<a href="https://github.com/ReactiveCocoa/ReactiveCocoa/issues/505" target="_blank" rel="external">ReactiveCocoa</a>中详细记录了用copy关键字会导致内存泄露的bug。具体代码如下：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">[[[@[@<span class="number">1</span>,@<span class="number">2</span>,@<span class="number">3</span>,@<span class="number">4</span>,@<span class="number">5</span>] rac_sequence] filter:^<span class="built_in">BOOL</span>(<span class="keyword">id</span> value) &#123;</div><div class="line">    <span class="keyword">return</span> [value intValue] &gt; <span class="number">1</span>;</div><div class="line">&#125;] array];</div></pre></td></tr></table></figure>
+<p>最终发现这个问题的人把copy改成strong就神奇的修复了这个bug。最终整个ReactiveCocoa库里面就只有这里把block的关键字从copy改成了strong，而不是所有的地方都改成strong。</p>
+<p>原作者 <a href="https://github.com/jspahrsummers" target="_blank" rel="external">Justin Spahr-Summers</a>大神对这个问题的<a href="https://github.com/ReactiveCocoa/ReactiveCocoa/pull/506" target="_blank" rel="external">最终解释</a>是：</p>
+<blockquote>
+<p>Maybe there’s just something weird with how we override dealloc, set the blocks from a class method, cast them, or something else.</p>
+</blockquote>
+<p>所以日常我们写block的时候，没有特殊情况，依旧需要继续用copy进行修饰。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">+ (RACSequence *)sequenceWithHeadBlock:(<span class="keyword">id</span> (^)(<span class="keyword">void</span>))headBlock tailBlock:(RACSequence *(^)(<span class="keyword">void</span>))tailBlock &#123;</div><div class="line">   <span class="built_in">NSCParameterAssert</span>(headBlock != <span class="literal">nil</span>);</div><div class="line"></div><div class="line">   RACDynamicSequence *seq = [[RACDynamicSequence alloc] init];</div><div class="line">   seq.headBlock = [headBlock <span class="keyword">copy</span>];</div><div class="line">   seq.tailBlock = [tailBlock <span class="keyword">copy</span>];</div><div class="line">   seq.hasDependency = <span class="literal">NO</span>;</div><div class="line">   <span class="keyword">return</span> seq;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>hasDependency这个变量是代表是否有dependencyBlock。这个函数里面就只把headBlock和tailBlock保存起来了。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">+ (RACSequence *)sequenceWithLazyDependency:(<span class="keyword">id</span> (^)(<span class="keyword">void</span>))dependencyBlock headBlock:(<span class="keyword">id</span> (^)(<span class="keyword">id</span> dependency))headBlock tailBlock:(RACSequence *(^)(<span class="keyword">id</span> dependency))tailBlock &#123;</div><div class="line">    <span class="built_in">NSCParameterAssert</span>(dependencyBlock != <span class="literal">nil</span>);</div><div class="line">    <span class="built_in">NSCParameterAssert</span>(headBlock != <span class="literal">nil</span>);</div><div class="line"></div><div class="line">    RACDynamicSequence *seq = [[RACDynamicSequence alloc] init];</div><div class="line">    seq.headBlock = [headBlock <span class="keyword">copy</span>];</div><div class="line">    seq.tailBlock = [tailBlock <span class="keyword">copy</span>];</div><div class="line">    seq.dependencyBlock = [dependencyBlock <span class="keyword">copy</span>];</div><div class="line">    seq.hasDependency = <span class="literal">YES</span>;</div><div class="line">    <span class="keyword">return</span> seq;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>另外一个类方法sequenceWithLazyDependency: headBlock: tailBlock:是带有dependencyBlock的，这个方法里面会保存headBlock，tailBlock，dependencyBlock这3个block。</p>
+<p>从RACSequence这两个唯一的初始化方法之间就引出了RACSequence两大核心问题之一，积极运算 和 惰性求值。</p>
+<h3 id="积极运算-和-惰性求值"><a href="#积极运算-和-惰性求值" class="headerlink" title="积极运算 和 惰性求值"></a>积极运算 和 惰性求值</h3><p>在RACSequence的定义中还有两个RACSequence —— eagerSequence 和 lazySequence。这两个RACSequence就是分别对应着积极运算的RACSequence和惰性求值的RACSequence。</p>
+<p>关于这两个概念最最新形象的比喻还是臧老师博客里面的这篇文章<a href="http://williamzang.com/blog/2016/11/07/liao-yi-liao-ioskai-fa-zhong-de-duo-xing-ji-suan/" target="_blank" rel="external">聊一聊iOS开发中的惰性计算</a>里面写的一段笑话。引入如下：</p>
+<blockquote>
+<p>有一只小白兔，跑到蔬菜店里问老板：“老板，有100个胡萝卜吗？”。老板说：“没有那么多啊。”，小白兔失望的说道：“哎，连100个胡萝卜都没有。。。”。第二天小白兔又来到蔬菜店问老板：“今天有100个胡萝卜了吧？”，老板尴尬的说：“今天还是缺点，明天就能好了。”，小白兔又很失望的走了。第三天小白兔刚一推门，老板就高兴的说道：“有了有了，从前天就进货的100个胡萝卜到货了。”，小白兔说：“太好了，我要买2根！”。。。</p>
+</blockquote>
+<p>如果日常我们遇到了这种问题，就很浪费内存空间了。比如在内存里面开了一个100W大小的数组，结果实际只使用到100个数值。这个时候就需要用到惰性运算了。</p>
+<p>在RACSequence里面这两种方式都支持，我们来看看底层源码是如何实现的。</p>
+<p>先来看看平时我们很熟悉的情况——积极运算。</p>
+<p><img src="https://github.com/pjocer/blogSource/blob/master/RAC-API%E4%B8%AA%E4%BA%BA%E6%80%BB%E7%BB%93-%E4%BA%8C/eager_beaver.png?raw=true" alt="EAGER BEAVER"></p>
+<p>在RACSequence中<strong>积极运算</strong>的代表是RACSequence的一个子类RACArraySequence的子类——RACEagerSequence。它的积极运算表现在其bind函数上。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">instancetype</span>)bind:(RACStreamBindBlock (^)(<span class="keyword">void</span>))block &#123;</div><div class="line">    <span class="built_in">NSCParameterAssert</span>(block != <span class="literal">nil</span>);</div><div class="line">    RACStreamBindBlock bindBlock = block();</div><div class="line">    <span class="built_in">NSArray</span> *currentArray = <span class="keyword">self</span>.array;</div><div class="line">    <span class="built_in">NSMutableArray</span> *resultArray = [<span class="built_in">NSMutableArray</span> arrayWithCapacity:currentArray.count];</div><div class="line"></div><div class="line">    <span class="keyword">for</span> (<span class="keyword">id</span> value <span class="keyword">in</span> currentArray) &#123;</div><div class="line">        <span class="built_in">BOOL</span> stop = <span class="literal">NO</span>;</div><div class="line">        RACSequence *boundValue = (<span class="keyword">id</span>)bindBlock(value, &amp;stop);</div><div class="line">        <span class="keyword">if</span> (boundValue == <span class="literal">nil</span>) <span class="keyword">break</span>;</div><div class="line"></div><div class="line">        <span class="keyword">for</span> (<span class="keyword">id</span> x <span class="keyword">in</span> boundValue) &#123;</div><div class="line">            [resultArray addObject:x];</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (stop) <span class="keyword">break</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> [[<span class="keyword">self</span>.class sequenceWithArray:resultArray offset:<span class="number">0</span>] setNameWithFormat:<span class="string">@"[%@] -bind:"</span>, <span class="keyword">self</span>.name];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>从上述代码中能看到主要是进行了2层循环，最外层循环遍历的自己RACSequence中的值，然后拿到这个值传入闭包bindBlock( )中，返回一个RACSequence，最后用一个NSMutableArray依次把每个RACSequence里面的值都装起来。</p>
+<p>第二个for-in循环是在遍历RACSequence，之所以可以用for-in的方式遍历就是因为实现了NSFastEnumeration协议，实现了countByEnumeratingWithState: objects: count: 方法，这个方法在上面详细分析过了，这里不再赘述。</p>
+<p>这里就是一个积极运算的例子，在每次循环中都会把闭包block( )的值计算出来。值得说明的是，最后返回的RACSequence的类型是self.class类型的，即还是RACEagerSequence类型的。</p>
+<p>再来看看RACSequence中的<strong>惰性求值</strong>是怎么实现的。</p>
+<p>在RACSequence中，bind函数是下面这个样子：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">instancetype</span>)bind:(RACStreamBindBlock (^)(<span class="keyword">void</span>))block &#123;</div><div class="line">    RACStreamBindBlock bindBlock = block();</div><div class="line">    <span class="keyword">return</span> [[<span class="keyword">self</span> bind:bindBlock passingThroughValuesFromSequence:<span class="literal">nil</span>] setNameWithFormat:<span class="string">@"[%@] -bind:"</span>, <span class="keyword">self</span>.name];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>实际上调用了bind: passingThroughValuesFromSequence:方法，第二个入参传入nil。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">instancetype</span>)bind:(RACStreamBindBlock)bindBlock passingThroughValuesFromSequence:(RACSequence *)passthroughSequence &#123;</div><div class="line"></div><div class="line">    __block RACSequence *valuesSeq = <span class="keyword">self</span>;</div><div class="line">    __block RACSequence *current = passthroughSequence;</div><div class="line">    __block <span class="built_in">BOOL</span> stop = <span class="literal">NO</span>;</div><div class="line"></div><div class="line">    RACSequence *sequence = [RACDynamicSequence sequenceWithLazyDependency:^ <span class="keyword">id</span> &#123;</div><div class="line">        <span class="comment">// 暂时省略</span></div><div class="line">    &#125; headBlock:^(<span class="keyword">id</span> _) &#123;</div><div class="line">        <span class="keyword">return</span> current.head;</div><div class="line">    &#125; tailBlock:^ <span class="keyword">id</span> (<span class="keyword">id</span> _) &#123;</div><div class="line">        <span class="keyword">if</span> (stop) <span class="keyword">return</span> <span class="literal">nil</span>;</div><div class="line">        <span class="keyword">return</span> [valuesSeq bind:bindBlock passingThroughValuesFromSequence:current.tail];</div><div class="line">    &#125;];</div><div class="line"></div><div class="line">    sequence.name = <span class="keyword">self</span>.name;</div><div class="line">    <span class="keyword">return</span> sequence;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在bind: passingThroughValuesFromSequence:方法的实现中，就是用sequenceWithLazyDependency: headBlock: tailBlock:方法生成了一个RACSequence，并返回。在sequenceWithLazyDependency: headBlock: tailBlock:上面分析过源码，主要目的是为了保存3个闭包，headBlock，tailBlock，dependencyBlock。</p>
+<p>通过调用RACSequence里面的bind操作，并没有执行3个闭包里面的值，只是保存起来了。这里就是惰性求值的表现——等到要用的时候才会计算。</p>
+<p>通过上述源码的分析，可以写出如下的测试代码加深理解。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">NSArray</span> *array = @[@<span class="number">1</span>,@<span class="number">2</span>,@<span class="number">3</span>,@<span class="number">4</span>,@<span class="number">5</span>];</div><div class="line"></div><div class="line">    RACSequence *lazySequence = [array.rac_sequence map:^<span class="keyword">id</span>(<span class="keyword">id</span> value) &#123;</div><div class="line">        <span class="built_in">NSLog</span>(<span class="string">@"lazySequence"</span>);</div><div class="line">        <span class="keyword">return</span> @(<span class="number">101</span>);</div><div class="line">    &#125;];</div><div class="line"></div><div class="line">    RACSequence *eagerSequence = [array.rac_sequence.eagerSequence map:^<span class="keyword">id</span>(<span class="keyword">id</span> value) &#123;</div><div class="line">        <span class="built_in">NSLog</span>(<span class="string">@"eagerSequence"</span>);</div><div class="line">        <span class="keyword">return</span> @(<span class="number">100</span>);</div><div class="line">    &#125;];</div><div class="line">   	输出:eagerSequence</div><div class="line">	 	 eagerSequence</div><div class="line">		 eagerSequence</div><div class="line">		 eagerSequence</div><div class="line">		 eagerSequence</div></pre></td></tr></table></figure>
+<p>只输出了5遍eagerSequence，lazySequence并没有输出。原因是因为bind闭包只在eagerSequence中真正被调用执行了，而在lazySequence中bind闭包仅仅只是被copy了。</p>
+<p>那如何让lazySequence执行bind闭包呢？</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[lazySequence array];</div></pre></td></tr></table></figure>
+<p>通过执行上述代码，就可以输出5遍“lazySequence”了。因为bind闭包再次会被调用执行。</p>
+<p><strong>积极运算</strong> 和 <strong>惰性求值</strong>在这里就区分出来了。在RACSequence中，除去RACEagerSequence只积极运算，其他的Sequence都是<strong>惰性求值</strong>的。</p>
+<p>接下来再继续分析RACSequence是如何实现<strong>惰性求值</strong>的。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line">RACSequence *sequence = [RACDynamicSequence sequenceWithLazyDependency:^ <span class="keyword">id</span> &#123;</div><div class="line">    <span class="keyword">while</span> (current.head == <span class="literal">nil</span>) &#123;</div><div class="line">        <span class="keyword">if</span> (stop) <span class="keyword">return</span> <span class="literal">nil</span>;</div><div class="line"></div><div class="line">        <span class="comment">// 遍历当前sequence，取出下一个值</span></div><div class="line">        <span class="keyword">id</span> value = valuesSeq.head;</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (value == <span class="literal">nil</span>) &#123;</div><div class="line">            <span class="comment">// 遍历完sequence所有的值</span></div><div class="line">            stop = <span class="literal">YES</span>;</div><div class="line">            <span class="keyword">return</span> <span class="literal">nil</span>;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        current = (<span class="keyword">id</span>)bindBlock(value, &amp;stop);</div><div class="line">        <span class="keyword">if</span> (current == <span class="literal">nil</span>) &#123;</div><div class="line">            stop = <span class="literal">YES</span>;</div><div class="line">            <span class="keyword">return</span> <span class="literal">nil</span>;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        valuesSeq = valuesSeq.tail;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="built_in">NSCAssert</span>([current isKindOfClass:RACSequence.class], <span class="string">@"-bind: block returned an object that is not a sequence: %@"</span>, current);</div><div class="line">    <span class="keyword">return</span> <span class="literal">nil</span>;</div><div class="line">&#125; headBlock:^(<span class="keyword">id</span> _) &#123;</div><div class="line">    <span class="keyword">return</span> current.head;</div><div class="line">&#125; tailBlock:^ <span class="keyword">id</span> (<span class="keyword">id</span> _) &#123;</div><div class="line">    <span class="keyword">if</span> (stop) <span class="keyword">return</span> <span class="literal">nil</span>;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> [valuesSeq bind:bindBlock passingThroughValuesFromSequence:current.tail];</div><div class="line">&#125;];</div></pre></td></tr></table></figure>
+<p>在bind操作中创建了这样一个lazySequence，3个block闭包保存了如何创建一个lazySequence的做法。</p>
+<p>headBlock是入参为id，返回值也是一个id。在创建lazySequence的head的时候，并不关心入参，直接返回passthroughSequence的head。</p>
+<p>tailBlock是入参为id，返回值为RACSequence。由于RACSequence的定义类似递归定义的，所以tailBlock会再次递归调用bind:passingThroughValuesFromSequence:产生一个RACSequence作为新的sequence的tail。</p>
+<p>dependencyBlock的返回值是作为headBlock和tailBlock的入参。不过现在headBlock和tailBlock都不关心这个入参。那么dependencyBlock就是成为了headBlock和tailBlock闭包执行之前要执行的闭包。</p>
+<p>dependencyBlock的目的是为了把原来的sequence里面的值，都进行一次变换。current是入参passthroughSequence，valuesSeq就是原sequence的引用。每次循环一次就取出原sequence的头，直到取不到为止，就是遍历完成。</p>
+<p>取出valuesSeq的head，传入bindBlock( )闭包进行变换，返回值是一个current 的sequence。在每次headBlock和tailBlock之前都会调用这个dependencyBlock，变换后新的sequence的head就是current的head，新的sequence的tail就是递归调用传入的current.tail。</p>
+<p>RACDynamicSequence创建的lazyDependency的过程就是保存了3个block的过程。那这些闭包什么时候会被调用呢？</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">- (<span class="keyword">id</span>)head &#123;</div><div class="line">    <span class="keyword">@synchronized</span> (<span class="keyword">self</span>) &#123;</div><div class="line">        <span class="keyword">id</span> untypedHeadBlock = <span class="keyword">self</span>.headBlock;</div><div class="line">        <span class="keyword">if</span> (untypedHeadBlock == <span class="literal">nil</span>) <span class="keyword">return</span> _head;</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (<span class="keyword">self</span>.hasDependency) &#123;</div><div class="line">            <span class="keyword">if</span> (<span class="keyword">self</span>.dependencyBlock != <span class="literal">nil</span>) &#123;</div><div class="line">                _dependency = <span class="keyword">self</span>.dependencyBlock();</div><div class="line">                <span class="keyword">self</span>.dependencyBlock = <span class="literal">nil</span>;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">id</span> (^headBlock)(<span class="keyword">id</span>) = untypedHeadBlock;</div><div class="line">            _head = headBlock(_dependency);</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            <span class="keyword">id</span> (^headBlock)(<span class="keyword">void</span>) = untypedHeadBlock;</div><div class="line">            _head = headBlock();</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">self</span>.headBlock = <span class="literal">nil</span>;</div><div class="line">        <span class="keyword">return</span> _head;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的源码就是获取RACDynamicSequence中head的实现。当要取出sequence的head的时候，就会调用headBlock( )。如果保存了dependencyBlock闭包，在执行headBlock( )之前会先执行dependencyBlock( )进行一次变换。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">- (RACSequence *)tail &#123;</div><div class="line">    <span class="keyword">@synchronized</span> (<span class="keyword">self</span>) &#123;</div><div class="line">        <span class="keyword">id</span> untypedTailBlock = <span class="keyword">self</span>.tailBlock;</div><div class="line">        <span class="keyword">if</span> (untypedTailBlock == <span class="literal">nil</span>) <span class="keyword">return</span> _tail;</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (<span class="keyword">self</span>.hasDependency) &#123;</div><div class="line">            <span class="keyword">if</span> (<span class="keyword">self</span>.dependencyBlock != <span class="literal">nil</span>) &#123;</div><div class="line">                _dependency = <span class="keyword">self</span>.dependencyBlock();</div><div class="line">                <span class="keyword">self</span>.dependencyBlock = <span class="literal">nil</span>;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            RACSequence * (^tailBlock)(<span class="keyword">id</span>) = untypedTailBlock;</div><div class="line">            _tail = tailBlock(_dependency);</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            RACSequence * (^tailBlock)(<span class="keyword">void</span>) = untypedTailBlock;</div><div class="line">            _tail = tailBlock();</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (_tail.name == <span class="literal">nil</span>) _tail.name = <span class="keyword">self</span>.name;</div><div class="line"></div><div class="line">        <span class="keyword">self</span>.tailBlock = <span class="literal">nil</span>;</div><div class="line">        <span class="keyword">return</span> _tail;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>获取RACDynamicSequence中tail的时候，和获取head是一样的，当需要取出tail的时候才会调用tailBlock( )。当有dependencyBlock闭包，会先执行dependencyBlock闭包，再调用tailBlock( )。</p>
+<h4 id="总结一下："><a href="#总结一下：" class="headerlink" title="总结一下："></a>总结一下：</h4><p>RACSequence的惰性求值，除去RACEagerSequence的bind函数以外，其他所有的Sequence都是基于惰性求值的。只有到取出来运算之前才会去把相应的闭包执行一遍。</p>
+<p>在RACSequence所有函数中，只有bind函数会传入dependencyBlock( )闭包，（RACEagerSequence会重写这个bind函数），所以看到dependencyBlock( )闭包一定可以推断出是RACSequence做了变换操作了。</p>
+]]></content>
+      
+        <categories>
+            
+            <category> iOS </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> framework </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[RAC API个人总结(一)]]></title>
+      <url>/2016/04/20/RAC-API%E4%B8%AA%E4%BA%BA%E6%80%BB%E7%BB%93/</url>
+      <content type="html"><![CDATA[<h3 id="一、常见类"><a href="#一、常见类" class="headerlink" title="一、常见类"></a>一、常见类</h3><h4 id="RACSignal"><a href="#RACSignal" class="headerlink" title="RACSignal"></a>RACSignal</h4><ul>
+<li>RACEmptySignal ：空信号，用来实现 RACSignal 的 +empty 方法；</li>
+</ul>
+<ul>
+<li>RACReturnSignal ：一元信号，用来实现 RACSignal 的 +return: 方法；</li>
+</ul>
+<ul>
+<li>RACDynamicSignal ：动态信号，使用一个 block - 来实现订阅行为，我们在使用 </li>
+</ul>
+<ul>
+<li>RACSignal 的 +createSignal: 方法时创建的就是该类的实例；</li>
+</ul>
+<ul>
+<li>RACErrorSignal ：错误信号，用来实现 RACSignal 的 +error: 方法；</li>
+</ul>
+<ul>
+<li>RACChannelTerminal ：通道终端，代表 RACChannel 的一个终端，用来实现双向绑定。</li>
+</ul>
+<a id="more"></a>
+<h4 id="RACDisposable"><a href="#RACDisposable" class="headerlink" title="RACDisposable"></a>RACDisposable</h4><p>RACDisposable 用于取消订阅或者清理资源，当信号发送完成或者发送错误的时候，就会自动触发它。</p>
+<ul>
+<li><p>RACSerialDisposable ：作为 disposable 的容器使用，可以包含一个 disposable 对象，并且允许将这个 disposable 对象通过原子操作交换出来；</p>
+</li>
+<li><p>RACKVOTrampoline ：代表一次 KVO 观察，并且可以用来停止观察；</p>
+</li>
+<li><p>RACCompoundDisposable ：它可以包含多个 disposable 对象，并且支持手动添加和移除 disposable 对象</p>
+</li>
+<li><p>RACScopedDisposable ：当它被 dealloc 的时候调用本身的 -dispose 方法。</p>
+</li>
+</ul>
+<h4 id="RACSubject"><a href="#RACSubject" class="headerlink" title="RACSubject"></a>RACSubject</h4><p>信号提供者，自己可以充当信号，又能发送信号。</p>
+<ul>
+<li><p>RACGroupedSignal ：分组信号，用来实现 RACSignal 的分组功能；</p>
+</li>
+<li><p>RACBehaviorSubject ：重演最后值的信号，当被订阅时，会向订阅者发送它最后接收到的值；</p>
+</li>
+<li><p>RACReplaySubject ：重演信号，保存发送过的值，当被订阅时，会向订阅者重新发送这些值。</p>
+</li>
+</ul>
+<h4 id="RACTuple"><a href="#RACTuple" class="headerlink" title="RACTuple"></a>RACTuple</h4><p>RACTuple 元组类,类似NSArray,用来包装值.</p>
+<h4 id="RACSequence"><a href="#RACSequence" class="headerlink" title="RACSequence"></a>RACSequence</h4><p>RAC中的集合类</p>
+<h4 id="RACCommand"><a href="#RACCommand" class="headerlink" title="RACCommand"></a>RACCommand</h4><p>RAC中用于处理事件的类，可以把事件如何处理,事件中的数据如何传递，包装到这个类中，他可以很方便的监控事件的执行过程。</p>
+<h4 id="RACMulticastConnection"><a href="#RACMulticastConnection" class="headerlink" title="RACMulticastConnection"></a>RACMulticastConnection</h4><p>用于当一个信号，被多次订阅时，为了保证创建信号时，避免多次调用创建信号中的block，造成副作用，可以使用这个类处理。</p>
+<h4 id="RACScheduler"><a href="#RACScheduler" class="headerlink" title="RACScheduler"></a>RACScheduler</h4><p>RAC中的队列，用GCD封装的。</p>
+<ul>
+<li><p>RACImmediateScheduler ：立即执行调度的任务，这是唯一一个支持同步执行的调度器；</p>
+</li>
+<li><p>RACQueueScheduler ：一个抽象的队列调度器，在一个 GCD 串行列队中异步调度所有任务；</p>
+</li>
+<li><p>RACTargetQueueScheduler ：继承自 RACQueueScheduler ，在一个以一个任意的 GCD 队列为 target 的串行队列中异步调度所有任务；</p>
+</li>
+<li><p>RACSubscriptionScheduler ：一个只用来调度订阅的调度器。</p>
+</li>
+</ul>
+<h3 id="二、常见用法"><a href="#二、常见用法" class="headerlink" title="二、常见用法"></a>二、常见用法</h3><ul>
+<li>rac_signalForSelector : 代替代理</li>
+<li>rac_valuesAndChangesForKeyPath: KVO</li>
+<li>rac_signalForControlEvents:监听事件</li>
+<li>rac_addObserverForName 代替通知</li>
+<li>rac_textSignal：监听文本框文字改变</li>
+<li>rac_liftSelector:withSignalsFromArray:Signals:当传入的Signals(信号数组)，每一个signal都至少sendNext过一次，就会去触发第一个selector参数的方法。与combineLatest:方法相同</li>
+</ul>
+<h3 id="三、常见宏"><a href="#三、常见宏" class="headerlink" title="三、常见宏"></a>三、常见宏</h3><ul>
+<li><p>RAC(TARGET, [KEYPATH, [NIL_VALUE]])：用于给某个对象的某个属性绑定</p>
+</li>
+<li><p>RACObserve(self, name) ：监听某个对象的某个属性,返回的是信号。</p>
+</li>
+<li><p>@weakify(Obj)和@strongify(Obj)</p>
+</li>
+<li><p>RACTuplePack ：把数据包装成RACTuple（元组类）</p>
+</li>
+<li><p>RACTupleUnpack：把RACTuple（元组类）解包成对应的数据</p>
+</li>
+<li><p>RACChannelTo 用于双向绑定的一个终端</p>
+</li>
+</ul>
+<h3 id="四、常用操作方法"><a href="#四、常用操作方法" class="headerlink" title="四、常用操作方法"></a>四、常用操作方法</h3><ul>
+<li><em>容易混淆的方法</em></li>
+</ul>
+<blockquote>
+<h2 id="map与flattenMap"><a href="#map与flattenMap" class="headerlink" title="map与flattenMap"></a><strong>map与flattenMap</strong></h2><blockquote>
+<p>flattenMap一般用于将某一信号的值映射成另一个信号<br>map更多用于直接映射信号的值，信号本身不变;<br>flatten: 信号的最大订阅数量</p>
+</blockquote>
+<p><strong>concat:</strong> </p>
+<blockquote>
+<p>a:concat:b 只有在b信号sendCompelete之后，a信号才会执行</p>
+</blockquote>
+<h2 id="repeat-retry-retry"><a href="#repeat-retry-retry" class="headerlink" title="repeat,retry,retry:"></a>repeat,retry,retry:</h2><blockquote>
+<p>repeat,重复执行信号;<br>retry,若信号sendError则重复执行信号;<br>retry: 信号sendError后最多执行n次</p>
+</blockquote>
+<h2 id="combineLatest-combineLatestWith-combineLatest-reduce"><a href="#combineLatest-combineLatestWith-combineLatest-reduce" class="headerlink" title="combineLatest:/combineLatestWith:/combineLatest:reduce:"></a>combineLatest:/combineLatestWith:/combineLatest:reduce:</h2><blockquote>
+<p>绑定一个信号、绑定多个信号、绑定多个信号并聚合成一个值 ————形成的新的信号需要所有信号都sendNext至少一次，才会sendNext</p>
+</blockquote>
+<h2 id="merge-zip"><a href="#merge-zip" class="headerlink" title="merge:/zip:/"></a>merge:/zip:/</h2><blockquote>
+<p>合并单个或多个信号，每个信号sendNext时，合并后的信号都会收到,相当于订阅所有的信号;<br>zip: 压缩信号，将每个信号的值包裹成RACTuple，压缩后的信号只有当被压缩的信号都sendNext时，才会sendNext</p>
+</blockquote>
+<p>try/catch 用法类似c++,捕捉异常，订阅Error</p>
+<p>switchToLatest 一般用于当信号的值是一个信号时，直接订阅信号的值信号。</p>
+</blockquote>
+]]></content>
+      
+        <categories>
+            
+            <category> iOS </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> framework </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Shell脚本学习]]></title>
+      <url>/2015/12/15/Shell%E8%84%9A%E6%9C%AC%E5%AD%A6%E4%B9%A0/</url>
+      <content type="html"><![CDATA[<h3 id="什么是Shell脚本"><a href="#什么是Shell脚本" class="headerlink" title="什么是Shell脚本"></a>什么是Shell脚本</h3><h4 id="示例"><a href="#示例" class="headerlink" title="示例:"></a>示例:</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#!/bin/sh</span></div><div class="line"><span class="built_in">cd</span> ~</div><div class="line">mkdir shell_tut</div><div class="line"><span class="built_in">cd</span> shell_tut</div><div class="line"></div><div class="line"><span class="keyword">for</span> ((i=0; i&lt;10; i++)); <span class="keyword">do</span></div><div class="line">    touch test_<span class="variable">$i</span>.txt</div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure>
+<p>示例解释:</p>
+<a id="more"></a>
+<ul>
+<li>第1行：指定脚本解释器，这里是用/bin/sh做解释器的</li>
+<li>第2行：切换到当前用户的home目录</li>
+<li>第3行：创建一个目录shell_tut</li>
+<li>第4行：切换到shell_tut目录</li>
+<li>第5行：循环条件，一共循环10次</li>
+<li>第6行：创建一个test_1…10.txt文件</li>
+<li>第7行：循环体结束</li>
+</ul>
+<p>cd, mkdir, touch都是系统自带的程序，一般在/bin或者/usr/bin目录下。for, do, done是sh脚本语言的关键字。</p>
+<h4 id="shell和shell脚本的概念"><a href="#shell和shell脚本的概念" class="headerlink" title="shell和shell脚本的概念"></a>shell和shell脚本的概念</h4><p>shell是指一种应用程序，这个应用程序提供了一个界面，用户通过这个界面访问操作系统内核的服务。Ken Thompson的sh是第一种Unix Shell，Windows Explorer是一个典型的图形界面Shell。</p>
+<p>shell脚本（shell script），是一种为shell编写的脚本程序。业界所说的shell通常都是指shell脚本，但读者朋友要知道，shell和shell script是两个不同的概念。由于习惯的原因，简洁起见，本文出现的“shell编程”都是指shell脚本编程，不是指开发shell自身（如Windows Explorer扩展开发）。</p>
+<h4 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h4><p>shell编程跟java、php编程一样，只要有一个能编写代码的文本编辑器和一个能解释执行的脚本解释器就可以了。Xcode中Build Phases中可以创建新的shell脚本，并在每次build时解释执行</p>
+<h4 id="脚本解释器"><a href="#脚本解释器" class="headerlink" title="脚本解释器"></a>脚本解释器</h4><p><strong>sh</strong></p>
+<p>即Bourne shell，POSIX（Portable Operating System Interface）标准的shell解释器，它的二进制文件路径通常是/bin/sh，由Bell Labs开发。</p>
+<p>Mac OS默认使用bash(shell软件最常用的一种)</p>
+<p>本文讲的是sh，如果你使用其它语言用作shell编程，请自行参考相应语言的文档。</p>
+<h3 id="第一个shell脚本"><a href="#第一个shell脚本" class="headerlink" title="第一个shell脚本"></a>第一个shell脚本</h3><h4 id="编写"><a href="#编写" class="headerlink" title="编写"></a>编写</h4><p>打开文本编辑器，新建一个文件，扩展名为sh（sh代表shell），扩展名并不影响脚本执行，见名知意就好，如果你用php写shell脚本，扩展名就用php好了。</p>
+<p>输入一些代码，第一行一般是这样：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#!/bin/bash</span></div><div class="line"><span class="comment">#!/usr/bin/php</span></div></pre></td></tr></table></figure>
+<p>“#!”是一个<code>约定的标记</code>，它告诉系统这个脚本需要什么解释器来执行。</p>
+<h4 id="运行"><a href="#运行" class="headerlink" title="运行"></a>运行</h4><p>运行Shell脚本有两种方法：</p>
+<p><strong>作为可执行程序</strong></p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">chmod +x test.sh</div><div class="line">./test.sh</div></pre></td></tr></table></figure>
+<p>注意，一定要写成./test.sh，而不是test.sh，运行其它二进制的程序也一样，直接写test.sh，linux系统会去PATH里寻找有没有叫test.sh的，而只有/bin, /sbin, /usr/bin，/usr/sbin等在PATH里，你的当前目录通常不在PATH里，所以写成test.sh是会找不到命令的，要用./test.sh告诉系统说，就在当前目录找。</p>
+<p>通过这种方式运行bash脚本，第一行一定要写对，好让系统查找到正确的解释器。</p>
+<p><strong>作为解释器参数</strong></p>
+<p>这种运行方式是，直接运行解释器，其参数就是shell脚本的文件名，如：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/bin/sh test.sh</div><div class="line">/bin/php test.php</div></pre></td></tr></table></figure>
+<p>这种方式运行的脚本，不需要在第一行指定解释器信息，写了也没用。</p>
+<h3 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h3><h4 id="定义变量"><a href="#定义变量" class="headerlink" title="定义变量"></a>定义变量</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">CONFIGURATION=<span class="string">"RELEASE"</span></div></pre></td></tr></table></figure>
+<p>注意：变量名和等号之间<strong>不能有空格</strong></p>
+<h4 id="使用变量"><a href="#使用变量" class="headerlink" title="使用变量"></a>使用变量</h4><p>使用一个定义过的变量，只要在变量名前面加美元符号即可，如：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">your_name=<span class="string">"qinjx"</span></div><div class="line"><span class="built_in">echo</span> <span class="variable">$your_name</span></div><div class="line"><span class="built_in">echo</span> <span class="variable">$&#123;your_name&#125;</span></div></pre></td></tr></table></figure>
+<p>变量名外面的花括号是可选的，加不加都行，加花括号是为了帮助解释器识别变量的边界，比如下面这种情况：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> skill <span class="keyword">in</span> Ada Coffe Action Java; <span class="keyword">do</span></div><div class="line">    <span class="built_in">echo</span> <span class="string">"I am good at <span class="variable">$&#123;skill&#125;</span>Script"</span></div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure>
+<p>如果不给skill变量加花括号，写成echo “I am good at $skillScript”，解释器就会把$skillScript当成一个变量（其值为空），代码执行结果就不是我们期望的样子了。</p>
+<p>推荐给所有变量加上花括号，这是个好的编程习惯。IntelliJ IDEA编写shell script时，IDE就会提示加花括号。</p>
+<h4 id="重定义变量"><a href="#重定义变量" class="headerlink" title="重定义变量"></a>重定义变量</h4><p>已定义的变量，可以被重新定义，如：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">your_name=<span class="string">"qinjx"</span></div><div class="line"><span class="built_in">echo</span> <span class="variable">$your_name</span></div><div class="line"></div><div class="line">your_name=<span class="string">"alibaba"</span></div><div class="line"><span class="built_in">echo</span> <span class="variable">$your_name</span></div></pre></td></tr></table></figure>
+<p>这样写是合法的，但注意，第二次赋值的时候不能写$your_name=”alibaba”，使用变量的时候才加美元符。</p>
+<h4 id="注释"><a href="#注释" class="headerlink" title="注释"></a>注释</h4><p>没有多行注释，需要每行都加#</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#--------------------------------------------</span></div><div class="line"><span class="comment"># 这是一个自动打ipa的脚本</span></div><div class="line"></div><div class="line"><span class="comment"># 功能：自动为ios app打包，产出物为14个渠道的ipa包</span></div><div class="line"><span class="comment"># 特色：全自动打包，不需要输入任何参数</span></div><div class="line"><span class="comment">#--------------------------------------------</span></div><div class="line"></div><div class="line"><span class="comment">##### 用户配置区 开始 #####</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment"># 项目根目录，推荐将此脚本放在项目的根目录，这里就不用改了</span></div><div class="line"><span class="comment"># 应用名，确保和Xcode里Product下的target_name.app名字一致</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">##### 用户配置区 结束  #####</span></div></pre></td></tr></table></figure>
+<p>如果在开发过程中，遇到大段的代码需要临时注释起来，过一会儿又取消注释，怎么办呢？每一行加个#符号太费力了，可以把这一段要注释的代码用一对花括号括起来，定义成一个函数，没有地方调用这个函数，这块代码就不会执行，达到了和注释一样的效果。</p>
+<h4 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h4><ul>
+<li><strong>单引号</strong></li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">str=<span class="string">'this is a string'</span></div></pre></td></tr></table></figure>
+<blockquote>
+<ul>
+<li>单引号里的任何字符都会原样输出，单引号字符串中的变量是无效的</li>
+<li>单引号字串中不能出现单引号（对单引号使用转义符后也不行）</li>
+</ul>
+</blockquote>
+<ul>
+<li><strong>双引号</strong></li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">your_name=<span class="string">'qinjx'</span></div><div class="line">str=<span class="string">"Hello, I know your are \"<span class="variable">$your_name</span>\"! \n"</span></div></pre></td></tr></table></figure>
+<blockquote>
+<ul>
+<li>双引号里可以有变量</li>
+<li>双引号里可以出现转义字符</li>
+</ul>
+</blockquote>
+<h3 id="字符串操作"><a href="#字符串操作" class="headerlink" title="字符串操作"></a>字符串操作</h3><h4 id="拼接字符串"><a href="#拼接字符串" class="headerlink" title="拼接字符串"></a>拼接字符串</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">your_name=<span class="string">"qinjx"</span></div><div class="line">greeting=<span class="string">"hello, "</span><span class="variable">$your_name</span><span class="string">" !"</span></div><div class="line">greeting_1=<span class="string">"hello, <span class="variable">$&#123;your_name&#125;</span> !"</span></div><div class="line"></div><div class="line"><span class="built_in">echo</span> <span class="variable">$greeting</span> <span class="variable">$greeting_1</span></div></pre></td></tr></table></figure>
+<h4 id="获取字符串长度："><a href="#获取字符串长度：" class="headerlink" title="获取字符串长度："></a>获取字符串长度：</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">string=<span class="string">"abcd"</span></div><div class="line"><span class="built_in">echo</span> <span class="variable">$&#123;#string&#125;</span> <span class="comment">#输出：4</span></div></pre></td></tr></table></figure>
+<h4 id="提取子字符串"><a href="#提取子字符串" class="headerlink" title="提取子字符串:"></a>提取子字符串:</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">string=<span class="string">"alibaba is a great company"</span></div><div class="line"><span class="built_in">echo</span> <span class="variable">$&#123;string:1:4&#125;</span> <span class="comment">#输出：liba</span></div></pre></td></tr></table></figure>
+<h4 id="查找子字符串"><a href="#查找子字符串" class="headerlink" title="查找子字符串:"></a>查找子字符串:</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">string=<span class="string">"alibaba is a great company"</span></div><div class="line"><span class="built_in">echo</span> `expr index <span class="string">"<span class="variable">$string</span>"</span> is`<span class="comment">#输出：8，这个语句的意思是：找出单词is在这名话中的位置</span></div></pre></td></tr></table></figure>
+<h4 id="更多"><a href="#更多" class="headerlink" title="更多"></a>更多</h4><p><a href="http://tldp.org/LDP/abs/html/string-manipulation.html" target="_blank" rel="external">Advanced Bash-Scripting Guid Chapter 10.1</a></p>
+<h4 id="if-else"><a href="#if-else" class="headerlink" title="if else"></a>if else</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> condition</div><div class="line"><span class="keyword">then</span></div><div class="line">    <span class="built_in">command</span>1 </div><div class="line">    <span class="built_in">command</span>2</div><div class="line">    ...</div><div class="line">    <span class="built_in">command</span>N </div><div class="line"><span class="keyword">fi</span></div></pre></td></tr></table></figure>
+<p><strong>写成一行（适用于终端命令提示符）：</strong></p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> `ps -ef | grep ssh`;  <span class="keyword">then</span> <span class="built_in">echo</span> hello; <span class="keyword">fi</span></div></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> condition</div><div class="line"><span class="keyword">then</span></div><div class="line">    <span class="built_in">command</span>1 </div><div class="line">    <span class="built_in">command</span>2</div><div class="line">    ...</div><div class="line">    <span class="built_in">command</span>N</div><div class="line"><span class="keyword">else</span></div><div class="line">    <span class="built_in">command</span></div><div class="line"><span class="keyword">fi</span></div></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> condition1</div><div class="line"><span class="keyword">then</span></div><div class="line">    <span class="built_in">command</span>1</div><div class="line"><span class="keyword">elif</span> condition2</div><div class="line">    <span class="built_in">command</span>2</div><div class="line"><span class="keyword">else</span></div><div class="line">    <span class="built_in">command</span>N</div><div class="line"><span class="keyword">fi</span></div></pre></td></tr></table></figure>
+<h4 id="for-while"><a href="#for-while" class="headerlink" title="for while"></a>for while</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> var <span class="keyword">in</span> item1 item2 ... itemN</div><div class="line"><span class="keyword">do</span></div><div class="line">    <span class="built_in">command</span>1</div><div class="line">    <span class="built_in">command</span>2</div><div class="line">    ...</div><div class="line">    <span class="built_in">command</span>N</div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure>
+<p><strong>写成一行：</strong></p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> var <span class="keyword">in</span> item1 item2 ... itemN; <span class="keyword">do</span> <span class="built_in">command</span>1; <span class="built_in">command</span>2… <span class="keyword">done</span>;</div></pre></td></tr></table></figure>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="http://c.biancheng.net/cpp/view/6994.html" target="_blank" rel="external">Shell 教程</a></p>
+]]></content>
+      
+        <categories>
+            
+            <category> extention </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> Xcode </tag>
+            
+            <tag> shell </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[创建私有Pod]]></title>
+      <url>/2015/12/02/%E5%88%9B%E5%BB%BA%E7%A7%81%E6%9C%89Pod/</url>
+      <content type="html"><![CDATA[<h3 id="创建私有Pod"><a href="#创建私有Pod" class="headerlink" title="创建私有Pod"></a>创建私有Pod</h3><p><strong>需要有两个Git仓库， 个作为私有库的索引，另 个存放私有库的代<br>码。</strong></p>
+<h3 id="创建索引库"><a href="#创建索引库" class="headerlink" title="创建索引库"></a>创建索引库</h3><p>在命令  输  pod repo 可以查看本地的Pod索引库，默认只有 CocoaPods官 的索引库 master 。</p>
+<p>在Git服务 上创建 个私有仓库，执 以下命令创建 个本地私有索引 库，再执  pod repo 就会有两个索引库 。</p>
+<p><code>pod repo add [Private Repo Name] [git clone URL]</code></p>
+<a id="more"></a>
+<h3 id="创建私有Pod-1"><a href="#创建私有Pod-1" class="headerlink" title="创建私有Pod"></a>创建私有Pod</h3><p><code>pod lib cerate [PrivatePodLibrary]</code></p>
+<p>创建的时候可以选择Pod是基于OC还是Swift的，是否包含Demo等。然 后添加代码，编写pod spec，验证Pod</p>
+<p><code>pod lib lint --allow-warnings --verbose</code></p>
+<p>验证通过之后把push pod刷新索引库</p>
+<p><code>pod repo push [Private Repo Name] [Pod Name.spec] --allo w-warnings</code></p>
+<h3 id="使用私有Pod"><a href="#使用私有Pod" class="headerlink" title="使用私有Pod"></a>使用私有Pod</h3><p> 在Podfile 加 私有索引库的URL，应该是下 这样的，第  是<br>CocoaPods官 索引库，第  是私有索引。然后 <code>pod install</code> 。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">source &apos;https://github.com/CocoaPods/Specs.git&apos;source [Privete Repo URL]</div></pre></td></tr></table></figure>]]></content>
+      
+        <categories>
+            
+            <category> 随记 </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> Pod </tag>
+            
+        </tags>
+        
+    </entry>
+    
+  
+  
+</search>

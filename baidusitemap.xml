@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+
+    
+  <url>
+    <loc>http://pjocer.top/2017/01/23/Spotlight-%E8%B0%83%E7%A0%94%E5%88%86%E4%BA%AB/</loc>
+    <lastmod>2017-05-03T12:08:16.000Z</lastmod>
+    <data>
+        <display>
+        <title>Spotlight 调研分享</title>
+        <pubTime>2017-01-23T11:40:33.000Z</pubTime>
+        
+        <tag>framework</tag>
+         
+        <tag>iOS</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://pjocer.top/2015/12/15/Shell%E8%84%9A%E6%9C%AC%E5%AD%A6%E4%B9%A0/</loc>
+    <lastmod>2017-05-03T03:21:35.000Z</lastmod>
+    <data>
+        <display>
+        <title>Shell脚本学习</title>
+        <pubTime>2015-12-15T02:16:17.000Z</pubTime>
+        
+        <tag>Xcode</tag>
+         
+        <tag>shell</tag>
+         
+         
+           
+             
+              <breadCrumb title="extention" url="http://pjocer.top/categories/extention/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://pjocer.top/2017/01/14/%E7%94%B3%E8%AF%B7%E5%8A%A0%E6%80%A5/</loc>
+    <lastmod>2017-04-26T08:02:46.000Z</lastmod>
+    <data>
+        <display>
+        <title>申请加急</title>
+        <pubTime>2017-01-14T06:28:08.000Z</pubTime>
+        
+        <tag>Apple</tag>
+         
+         
+           
+             
+              <breadCrumb title="随记" url="http://pjocer.top/categories/%E9%9A%8F%E8%AE%B0/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+    
+  <url>
+    <loc>http://pjocer.top/2016/05/13/HTTPS%E6%80%BB%E7%BB%93/</loc>
+    <lastmod>2017-04-26T07:40:02.000Z</lastmod>
+    <data>
+        <display>
+        <title>HTTPS总结</title>
+        <pubTime>2016-05-13T06:52:12.000Z</pubTime>
+        
+        <tag>HTTPS</tag>
+         
+         
+           
+             
+              <breadCrumb title="extention" url="http://pjocer.top/categories/extention/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://pjocer.top/2016/06/26/Build-Version%E8%87%AA%E5%A2%9E%E9%95%BF/</loc>
+    <lastmod>2017-04-26T06:49:51.000Z</lastmod>
+    <data>
+        <display>
+        <title>Build Version自增长</title>
+        <pubTime>2016-06-26T06:44:21.000Z</pubTime>
+        
+        <tag>Xcode</tag>
+         
+         
+           
+             
+              <breadCrumb title="随记" url="http://pjocer.top/categories/%E9%9A%8F%E8%AE%B0/"/>
+          
+             
+              <breadCrumb title="iOS" url="http://pjocer.top/categories/%E9%9A%8F%E8%AE%B0/iOS/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://pjocer.top/2015/12/02/%E5%88%9B%E5%BB%BA%E7%A7%81%E6%9C%89Pod/</loc>
+    <lastmod>2017-04-26T06:27:44.000Z</lastmod>
+    <data>
+        <display>
+        <title>创建私有Pod</title>
+        <pubTime>2015-12-02T06:03:40.000Z</pubTime>
+        
+        <tag>Pod</tag>
+         
+         
+           
+             
+              <breadCrumb title="随记" url="http://pjocer.top/categories/%E9%9A%8F%E8%AE%B0/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://pjocer.top/2016/04/24/RAC-API%E4%B8%AA%E4%BA%BA%E6%80%BB%E7%BB%93-%E4%BA%8C/</loc>
+    <lastmod>2017-04-24T08:30:36.000Z</lastmod>
+    <data>
+        <display>
+        <title>RAC API个人总结(二)</title>
+        <pubTime>2016-04-24T05:46:04.000Z</pubTime>
+        
+        <tag>framework</tag>
+         
+         
+           
+             
+              <breadCrumb title="iOS" url="http://pjocer.top/categories/iOS/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+    
+  <url>
+    <loc>http://pjocer.top/2016/04/20/RAC-API%E4%B8%AA%E4%BA%BA%E6%80%BB%E7%BB%93/</loc>
+    <lastmod>2017-04-24T02:34:34.000Z</lastmod>
+    <data>
+        <display>
+        <title>RAC API个人总结(一)</title>
+        <pubTime>2016-04-20T07:30:31.000Z</pubTime>
+        
+        <tag>framework</tag>
+         
+         
+           
+             
+              <breadCrumb title="iOS" url="http://pjocer.top/categories/iOS/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+    
+</urlset>
